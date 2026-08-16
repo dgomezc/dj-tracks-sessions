@@ -1,0 +1,668 @@
+# DJ Tracks & Sessions Implementation Plan
+
+This document is the executable source of truth for product scope, architecture, delivery order, and acceptance criteria.
+
+An implementation agent must complete phases in order. Within a phase, deliver one vertical work unit at a time with its tests. Do not start the next phase until the current phase exit criteria pass.
+
+## 1. Product Outcome
+
+Build a Spanish-language, single-user web application that runs in Docker on a Linux x86-64 NAS and manages a personal House/electronic music collection.
+
+The product has three clearly separated experiences:
+
+1. **Explorer / Player** for browsing, searching, playing, and organizing cataloged tracks.
+2. **Analyzer / Tagger** for identifying tracks, reviewing proposals, writing metadata, and processing pending files.
+3. **Sessions** for browsing and playing personal DJ sessions with associated TXT tracklists.
+
+## 2. Non-Goals
+
+- Desktop, mobile, Tauri, or Electron applications.
+- Multi-user accounts, authorization, or internet exposure in the MVP.
+- Automatic Beatport scraping.
+- Automatic deletion of any file.
+- Automatically moving files already in Main or Remember.
+- Automatically analyzing Sessions.
+- Statistics dashboards.
+- Managing lyrics, CUE files, or external artwork.
+- Session track timestamps or tracklist editing in the MVP.
+
+## 3. Runtime Configuration
+
+Docker Compose must configure these host paths as read/write mounts:
+
+| Environment setting | Container path | Policy |
+|---|---|---|
+| `MAIN_LIBRARY_PATH` | `/music/main` | Cataloged tracks; reanalysis by explicit request and approval |
+| `PENDING_LIBRARY_PATH` | `/music/pending` | Inbox; detect automatically, analyze manually, move after approval and confirmation |
+| `REMEMBER_LIBRARY_PATH` | `/music/remember` | Analyze/edit without moving; force `PersonalGenre=Remember` |
+| `SESSIONS_LIBRARY_PATH` | `/music/sessions` | Manual metadata only; separate player and TXT tracklists |
+| Application data | `/app/data` | Waveform cache and non-database runtime data |
+| PostgreSQL data | Managed Docker volume | Catalog, history, job state, playlists, notifications, and configuration |
+
+Also configure:
+
+- MusicBrainz application identity and contact.
+- Discogs token.
+- AcoustID application key.
+- NAS path to Windows/UNC translation profiles for playlist exports.
+- Scan/reconciliation interval.
+- Analysis concurrency, defaulting to one.
+- PostgreSQL database name, application user, password secret, and persistent volume.
+
+Secrets must come from environment variables or Docker secrets and must never be committed.
+
+PostgreSQL requirements:
+
+- Run PostgreSQL as a dedicated Docker Compose service with a health check and named data volume.
+- Configure the API with an Npgsql connection string supplied through environment/secrets.
+- Use Entity Framework Core migrations as the only schema evolution mechanism.
+- Apply migrations through an explicit deployment/startup step that fails visibly; never silently create or recreate the database.
+- Use PostgreSQL constraints and transactions for invariants that cross persisted records.
+- Test database behavior against the supported PostgreSQL major version through Testcontainers for .NET.
+
+## 4. Target Architecture
+
+```text
+Desktop browser
+  |
+  +-- MusicCatalog.Web (Blazor Interactive Server)
+          |
+          +-- generated/typed HTTP client
+                  |
+                  +-- MusicCatalog.Api
+                        +-- Vertical slices
+                        +-- Background job worker
+                        +-- PostgreSQL through EF Core/Npgsql
+                        +-- NAS filesystem adapters
+                        +-- Tag and image adapters
+                        +-- FFmpeg/Chromaprint adapters
+                        +-- Metadata provider adapters
+```
+
+### 4.1 Project Layout
+
+Create the minimum useful projects:
+
+```text
+src/
+  DjTracksSessions.Api/
+    Features/
+      Library/
+      Pending/
+      Matching/
+      Metadata/
+      Playback/
+      Playlists/
+      Duplicates/
+      History/
+      Sessions/
+    Domain/
+    Infrastructure/
+  DjTracksSessions.Web/
+  DjTracksSessions.Contracts/
+tests/
+  DjTracksSessions.UnitTests/
+  DjTracksSessions.IntegrationTests/
+```
+
+Do not create separate class-library projects for every conceptual layer until a real dependency boundary requires them.
+
+### 4.2 Slice Contract
+
+Each command/query slice should contain:
+
+- Request/route contract.
+- FluentValidation validator.
+- Handler.
+- FluentResults success/failure result.
+- Endpoint and HTTP mapping.
+- Slice-specific mapping.
+- Behavior tests.
+
+Use stable error codes such as `track.not_found`, `path.outside_root`, `match.ambiguous`, `file.collision`, and `tag.unsupported`.
+
+### 4.3 Background Work
+
+Long operations must not run in a Blazor circuit or HTTP request:
+
+- Root scans and reconciliations.
+- Hashing and fingerprinting.
+- Provider lookups.
+- BPM/key analysis.
+- Waveform generation.
+- Bulk tag operations.
+- History cleanup.
+
+Persist job status in PostgreSQL through Entity Framework Core. Expose progress and completion through API polling or server notifications. A restart must not silently lose queued/active work; interrupted items become retryable or failed with a reason.
+
+## 5. Core Data Model
+
+The exact EF entities may differ, but the persisted concepts must include:
+
+| Concept | Required responsibility |
+|---|---|
+| `LibraryRoot` | Root type, canonical path, and allowed capabilities |
+| `AudioTrack` | Stable ID, current path, root, technical properties, hashes, status |
+| `TrackMetadata` | Structured current provider/personal/effective metadata |
+| `MetadataProvenance` | Source, confidence, provider ID, and retrieval date per field |
+| `Artwork` | Current normalized image metadata/cache reference |
+| `AnalysisRun` | Input identity, state, tool versions, results, and failures |
+| `MatchCandidate` | Provider candidate, score, evidence, and selection state |
+| `ChangeProposal` | Before/after values requiring approval |
+| `ChangeHistory` | Reversible before state, operation, timestamp, and expiry |
+| `Playlist` | Manual ordered entries or smart rule definition |
+| `PlaybackSession` | Queue, shuffle state, current item, and last position |
+| `DuplicateGroup` | Exact/possible duplicate evidence and resolution state |
+| `DjSession` | Separate session metadata, audio identity, and tracklist path |
+| `Job` | Durable work state and progress |
+| `Notification` | Persistent completion/error notification |
+
+Use an optimistic concurrency token for mutating records and reject stale approvals.
+
+## 6. Metadata Rules
+
+### 6.1 Structured Values
+
+Store these separately rather than parsing display strings later:
+
+- Ordered primary artists.
+- Base title.
+- Mix name.
+- Remixers.
+- Provider year and personal year.
+- Provider genre and PersonalGenre.
+- Provider and locally analyzed BPM/key.
+- ISRC, label, catalog number, provider identifiers.
+
+### 6.2 Effective Values
+
+```text
+EffectiveYear = ProviderYear ?? PersonalYear
+EffectiveGenre = ProviderGenre ?? PersonalGenre
+EffectiveBpm = TrustedProviderBpm ?? LocalBpm
+EffectiveKey = TrustedProviderKey ?? LocalKey
+```
+
+Key output uses Camelot notation.
+
+### 6.3 Display And Filename
+
+```text
+Artist tag: Artist 1, Artist 2
+Title tag: Base Title (Remixer Remix)
+Filename: Artist 1, Artist 2 - Base Title (Remixer Remix).ext
+```
+
+Do not duplicate an existing remix suffix. Preserve the original extension and sanitize only characters invalid for the destination filesystem.
+
+### 6.4 PersonalGenre
+
+Allowed initial values:
+
+- `Day Instrumental`
+- `Day Vocal`
+- `Night Instrumental`
+- `Night Vocal`
+- `TechnoHouse`
+- `Tribal`
+- `Remember`
+
+It is mandatory for ordinary catalog tracks. Persist it in PostgreSQL and in the audio file. Initial MP3 mapping is `TXXX:PERSONAL_GENRE`; define and test an explicit mapping for each supported format.
+
+Classification evaluates energy/context, vocal presence, and tribal/ethnic character separately. `Tribal` and `TechnoHouse` are dominant categories. For pending tracks, show the best proposal, confidence, evidence, and strongest alternative; user approval is mandatory.
+
+## 7. Root Policies
+
+| Capability | Main | Pending | Remember | Sessions |
+|---|---:|---:|---:|---:|
+| Index automatically | Yes | Yes | Yes | Yes |
+| Browse/play | Yes | Yes | Yes | Separate section |
+| Analyze automatically on detection | No | No | No | Never |
+| Start provider analysis manually | Selected tracks | New/selected tracks | Selected tracks | Never |
+| Require approval before writing analyzed data | Always | Ambiguous match, artwork, PersonalGenre | Configured review flow | N/A |
+| Manual metadata editing | Yes | Yes | Yes | Yes |
+| Automatic move | Never | After approval and explicit confirmation | Never | Never |
+| PersonalGenre rule | From folder/manual | Inferred and approved | Always Remember | Not required |
+
+Pending analysis states:
+
+- New.
+- Queued.
+- Analyzing.
+- Awaiting match review.
+- Awaiting artwork review.
+- Awaiting PersonalGenre approval.
+- Approved, awaiting apply/move.
+- Unidentified.
+- Postponed/rejected.
+- Failed.
+- Completed/moved.
+
+Analysis identity is based on content hash and analysis version. A changed file becomes new. A previously analyzed unchanged file remains visibly analyzed and is excluded from the default run unless explicitly included.
+
+## 8. Provider And Analysis Strategy
+
+### 8.1 Matching Pipeline
+
+1. Read current tags and technical properties with no mutation.
+2. Calculate a content hash and duration.
+3. Prefer a valid existing ISRC.
+4. Generate Chromaprint fingerprint and query AcoustID.
+5. Resolve recordings/releases through MusicBrainz.
+6. Search/enrich through Discogs.
+7. Score candidates using ISRC, fingerprint, artists, normalized title/mix, and duration.
+8. Return the selected high-confidence candidate or a ranked review list.
+
+Respect provider identity requirements, attribution, licensing, caching rules, and rate limits. Implement retry with bounded exponential backoff for transient failures, but do not retry validation/authentication failures indefinitely.
+
+### 8.2 Local Audio Analysis
+
+Use containerized FFmpeg/ffprobe and a proven analysis library/tool to obtain:
+
+- Duration and codec properties.
+- BPM fallback.
+- Musical key fallback, converted to Camelot.
+- Waveform peak data.
+- Evidence useful for PersonalGenre suggestions where technically feasible.
+
+Record tool and algorithm versions so results can be invalidated and recalculated after an upgrade.
+
+### 8.3 Beatport
+
+Define a provider interface that can support Beatport later, but do not implement automated scraping. Authorized API integration and manual assisted URL import remain future work.
+
+## 9. Artwork Contract
+
+Artwork is always reviewed before replacement.
+
+When applying artwork:
+
+1. Prefer approved provider artwork.
+2. Otherwise select one existing embedded image.
+3. Correct orientation.
+4. Convert to JPEG.
+5. Fit within 500x500 while preserving aspect ratio.
+6. Never upscale.
+7. Remove all embedded images.
+8. Embed exactly the approved normalized image.
+9. Verify the resulting file can be reopened and contains one image.
+
+Store the previous artwork in reversible history until expiry.
+
+## 10. Filesystem And Mutation Contract
+
+- Resolve every requested path under its configured canonical root.
+- Reject symlink/path traversal escapes.
+- Check available write permission and destination collision before mutation.
+- Write tags to a temporary sibling file, reopen and verify it, then atomically replace the original where the filesystem supports it.
+- A move from Pending combines verified tag write, final filename, and destination move as a recoverable operation.
+- Approval does not authorize movement. Show exact source, destination, final filename, and collisions, then ask separately.
+- Destination uses `<PersonalYear>/House - <PersonalGenre>/`.
+- `PersonalYear` is the personal/download year, normally current year for new pending tracks.
+- If a destination filename exists, block and open duplicate/manual resolution. Never append `(1)`.
+- External moves in catalog roots update the index and create a metadata proposal when folder-derived values change; they do not write automatically.
+
+History retains full prior tags, artwork, filename, and path for 365 days. A scheduled job removes expired history and blobs. Permanent deletion cannot be undone and requires reinforced confirmation for both individual and bulk operations.
+
+## 11. Explorer / Player Requirements
+
+### 11.1 Explorer
+
+- Folder tree for Main, Pending, and Remember.
+- Dense desktop data grid.
+- Full-text search.
+- Filters for artist, title, effective year, provider genre, and PersonalGenre.
+- Combined filters, sorting, and multi-selection.
+- Actions for play, queue, manual edit, bulk edit, reanalyze, playlist, duplicate review, and delete.
+- Search results can replace or append to the queue.
+
+### 11.2 Global Player
+
+- One playback engine shared by global and contextual controls.
+- Queue from manual selection, folder, search, or playlist.
+- Add, remove, reorder, clear, previous, next, repeat, volume, and seek.
+- Shuffle creates a non-repeating cycle and preserves history for Previous.
+- Show artwork, artists, title, effective genre, PersonalGenre, BPM, and Camelot key.
+- Display an interactive waveform using server-generated cached peaks.
+- Persist queue, current track, shuffle state, and position; restore paused.
+- Resolve moved tracks by stable ID and skip missing/deleted entries.
+- Stream audio with HTTP Range support.
+
+### 11.3 Keyboard And Notifications
+
+- Context-aware shortcuts for play/pause, previous/next, queue, save, approve/reject, and pending navigation.
+- Ignore shortcuts while the user types.
+- Never bypass destructive confirmations.
+- Persist job-completion/error notifications and link to their results.
+
+## 12. Playlists
+
+Support:
+
+- Manual playlists with stable ordered track references.
+- Smart playlists that store filter rules and update dynamically.
+- Initial useful rules such as Day, Day Vocals, Night, Tribal, and TechnoHouse across all years.
+- Add/replace queue and shuffle playback.
+
+Export UTF-8 M3U8 using configurable profiles. Translate `/music/...` container paths to host-visible UNC/Windows paths for AIMP and Traktor. Offer relative and absolute modes when valid, and preview unresolved paths before export.
+
+## 13. Duplicates
+
+Detect:
+
+- Exact duplicates by content hash.
+- Possible duplicates by fingerprint, ISRC, normalized metadata, and duration.
+
+Comparison shows and allows playback of both files, with path, format, bitrate, sample rate, size, duration, metadata, and artwork. Recommend which file to retain using technical quality and exact version evidence. Never delete automatically.
+
+## 14. Sessions
+
+Sessions have their own routes, queries, explorer, search, and player. Do not reuse the global track queue.
+
+Requirements:
+
+- Browse by year/folder.
+- Read actual duration from audio.
+- Highlight title, year, artwork, and duration while allowing other supported manual metadata edits.
+- Never call music metadata providers or automatic track analysis.
+- Show an interactive waveform.
+- Do not persist playback position.
+- Resolve tracklist in this order:
+  1. `<audio-base-name>.txt` beside the audio.
+  2. `tracklist.txt` beside the audio when the directory represents one session.
+  3. Mark ambiguous if multiple audios share one generic tracklist.
+- Display tracklist text read-only and preserve the source file unchanged.
+
+## 15. Delivery Phases
+
+### 15.1 Development And Test Deployment Workflow
+
+Git and the canonical GitHub repository, <https://github.com/dgomezc/dj-tracks-and-sessions>, are the source of truth. The normal delivery path is:
+
+1. Clone and keep the working tree in the WSL Linux filesystem on the Windows 11 development PC, not under `/mnt/c`, unless a documented tool constraint requires otherwise. This preserves Linux/Docker filesystem semantics and avoids cross-filesystem performance penalties.
+2. Develop on a feature branch in WSL. Run repeatable local builds, tests, and Docker Compose verification against disposable fixture roots and disposable PostgreSQL containers. This local verification is the delivery gate. Never mount the production music library in the local loop.
+3. After tests pass, build immutable `linux/amd64` application images locally from the exact Git commit and tag them with an explicit commit-derived tag. Push the feature branch and commits to GitHub manually. Do not use a floating `latest` tag.
+4. Transfer the exact tagged images directly from WSL to the NAS over SSH, such as by streaming a Docker image archive into the NAS image loader or through an equivalent parameterized script. The operation must preserve the selected tag without requiring a registry. The NAS host, SSH user, deployment path, and image tag are parameters; `192.168.68.100` is the current default LAN test target, not a hardcoded application value.
+5. Deploy a versioned test Compose stack that references the transferred commit-derived tag, uses NAS-only secrets and configuration, mounts only disposable or representative test roots initially, backs up PostgreSQL, runs an explicit migration step that fails visibly, starts services, and performs health and smoke checks.
+
+The deployment operation must return a failure when image transfer/load, backup, migration, startup, health, or smoke verification fails. Credentials and secrets must not appear in source control, image tags, command arguments recorded by the repository, or deployment logs.
+
+Rollback selects the previous immutable image tag. Restore the pre-migration database backup only when the prior application version is incompatible with the migrated schema; never attempt an implicit schema downgrade. The deployment documentation must state the migration compatibility boundary and make backup, migration, and rollback failures visible.
+
+GitHub Actions automation and publishing images to GHCR may be evaluated later. Neither is part of the current plan or delivery gate.
+
+### Phase 0: Feasibility Spikes
+
+Goal: remove technical uncertainty before building product workflows.
+
+Work units:
+
+1. Read/write round trip for representative MP3, FLAC, M4A, AIFF, and WAV fixtures.
+2. Custom PersonalGenre mapping per format.
+3. Artwork normalization and one-image verification.
+4. FFmpeg/ffprobe, Chromaprint, BPM/key analysis in `linux/amd64` container.
+5. HTTP Range streaming and waveform peak generation.
+6. Provider clients proving MusicBrainz, Discogs, and AcoustID requests, limits, and normalized fixtures.
+
+Exit criteria:
+
+- A written capability matrix identifies safe read/write fields per format.
+- Sample files survive verified mutation without losing unknown tags.
+- Tool images run on the target NAS architecture.
+- Provider adapters have deterministic fixture tests.
+- Any unsupported format behavior is explicitly degraded instead of guessed.
+
+### Phase 1: Application Foundation
+
+Goal: boot a production-shaped empty application.
+
+Work units:
+
+1. Solution, projects, dependency direction, and test projects.
+2. API Problem Details and FluentResults mapping.
+3. FluentValidation registration and explicit async validation pipeline.
+4. PostgreSQL schema, reviewed EF Core migrations through Npgsql, and health checks.
+5. Dockerfiles and Docker Compose with four music mounts, PostgreSQL, and persistent volumes.
+6. Blazor Blueprint shell, Spanish UI, light/dark themes, and separate main navigation areas.
+7. Durable job and notification primitives.
+8. Repeatable local WSL commands or scripts for build, test, Compose verification, and immutable `linux/amd64` image builds from an exact Git commit.
+9. Versioned NAS test Compose configuration and one parameterized WSL-to-NAS deployment operation covering direct exact-tag image transfer/load, pre-migration backup, explicit migration, startup, health checks, and smoke checks.
+
+Exit criteria:
+
+- Compose starts API and Web on `linux/amd64`.
+- Health checks verify database, configured mounts, and required tools.
+- Frontend communicates only through API contracts.
+- Integration tests run against disposable PostgreSQL containers and filesystem roots.
+- Local verification fails before image build or deployment when required builds, tests, or Compose checks fail; locally built images use an explicit immutable commit-derived tag.
+- A deployment to the configurable NAS test target succeeds using NAS-only configuration and disposable roots, without a floating image tag or hardcoded credentials.
+- A failed image transfer/load, backup, migration, startup, health check, or smoke check exits visibly without enabling real-library mounts.
+
+### Phase 2: Library Index
+
+Goal: establish a trustworthy, read-only catalog.
+
+Work units:
+
+1. Configure and validate root policies.
+2. Scan supported audio and session TXT files.
+3. Extract technical properties and current tags.
+4. Calculate stable hash identity incrementally.
+5. Reconcile renamed, moved, changed, and missing files.
+6. Watch roots and schedule full reconciliation.
+7. Build folder tree, catalog grid, search, and required filters.
+
+Exit criteria:
+
+- All four roots index without modifying files.
+- Repeated scans are idempotent.
+- Moves are correlated by identity where possible.
+- Traversal outside configured roots is rejected.
+- Main/Pending/Remember are visibly distinct; Sessions is separate.
+
+### Phase 3: Playback
+
+Goal: make the catalog usable as a music player.
+
+Work units:
+
+1. Range-enabled audio endpoint with format-appropriate content type.
+2. Global playback service and persistent shell player.
+3. Queue CRUD and persisted playback session.
+4. Shuffle cycle/history and repeat.
+5. Waveform job/cache/API and interactive component.
+6. Mini-player integration and keyboard shortcuts.
+
+Exit criteria:
+
+- Seeking works without downloading the full file first.
+- Navigation does not interrupt playback.
+- Global and mini controls never play different tracks simultaneously.
+- Queue and position restore paused after restart.
+
+### Phase 4: Safe Metadata Editing
+
+Goal: edit original files with preview, verification, and undo.
+
+Work units:
+
+1. Format capability API and metadata editor.
+2. Canonical title/artist/remix normalization.
+3. Filename preview, sanitization, and collision validation.
+4. Individual atomic tag write and post-write verification.
+5. Bulk patch semantics and per-file outcomes.
+6. PersonalGenre embedded-tag mappings.
+7. Artwork review and normalization.
+8. Reversible history and 365-day cleanup.
+9. Individual and bulk permanent deletion confirmation.
+
+Exit criteria:
+
+- No write occurs without an exact before/after preview where review is required.
+- Unsupported fields are disclosed and not silently dropped.
+- Undo restores tags, artwork, name, and path for verified fixtures.
+- Failed batch items do not invalidate successful independent items.
+
+### Phase 5: Identification And Analysis
+
+Goal: generate explainable metadata proposals.
+
+Work units:
+
+1. Chromaprint generation and AcoustID lookup.
+2. MusicBrainz search/resolution.
+3. Discogs enrichment.
+4. Normalized provider model and provenance.
+5. Candidate scoring and confidence thresholds.
+6. Ranked match-review UI with contextual playback.
+7. Local BPM and key fallback.
+8. PersonalGenre classifier with evidence and alternative.
+
+Exit criteria:
+
+- Ambiguous matches never mutate files.
+- Every proposed field exposes source and confidence.
+- Main-library reanalysis always creates an approval proposal.
+- Remember proposals force PersonalGenre to Remember.
+- Key writes as valid Camelot notation.
+
+### Phase 6: Pending Workflow
+
+Goal: process the inbox safely from detection to confirmed movement.
+
+Work units:
+
+1. Pending states, notifications, and default selection of unprocessed files.
+2. Manual start for all new or selected files.
+3. Review workspace combining candidates, artwork, PersonalGenre, and mini-player.
+4. Approval without movement authorization.
+5. Destination calculation from PersonalYear and approved PersonalGenre.
+6. Movement preview and explicit individual/bulk confirmation.
+7. Collision/duplicate handoff and recoverable apply operation.
+
+Exit criteria:
+
+- Detection never starts analysis.
+- Previously analyzed unchanged files are not reprocessed by default.
+- No file moves before explicit destination confirmation.
+- A collision blocks the move without creating a suffixed filename.
+- Completed tracks appear correctly in Main after reconciliation.
+
+### Phase 7: Playlists And Duplicates
+
+Goal: support listening workflows and safe library cleanup.
+
+Work units:
+
+1. Manual playlists.
+2. Smart playlist rule model and initial presets.
+3. Queue integration.
+4. M3U8 export and path profiles for AIMP/Traktor.
+5. Exact duplicate groups.
+6. Possible duplicate scoring, comparison, and retention recommendation.
+
+Exit criteria:
+
+- Smart playlists update when metadata changes.
+- Manual playlist order survives file moves.
+- Export preview contains host-visible paths.
+- Duplicate deletion remains an explicit confirmed action.
+
+### Phase 8: Sessions
+
+Goal: deliver the independent sessions experience.
+
+Work units:
+
+1. Session indexing and year/folder explorer.
+2. Session detail and manual metadata editing.
+3. Separate player with waveform and no persisted position.
+4. Tracklist resolution, ambiguity state, and read-only display.
+
+Exit criteria:
+
+- Sessions do not appear in track searches, global queue, playlists, or duplicate jobs.
+- No automatic provider analysis is available for Sessions.
+- Matching TXT displays while the session plays and remains unchanged.
+
+### Phase 9: NAS Hardening And Release
+
+Goal: prove safe operation against a representative copy before mounting the real library.
+
+Work units:
+
+1. Resource limits, cancellation, retries, and graceful shutdown.
+2. Structured logs and diagnostics bundle without secrets.
+3. Database backup/restore instructions and migration recovery.
+4. NAS permission and path-mapping validation.
+5. Representative-library acceptance run.
+6. Deployment, upgrade, rollback, and disaster-recovery documentation.
+7. Production deployment rehearsal using exact immutable tags, pre-migration backup, migration compatibility notes, and previous-tag rollback.
+
+Exit criteria:
+
+- Full workflow passes against a disposable representative library.
+- Restart during analysis/tagging has a documented safe outcome.
+- Real-library mount is not enabled until the user accepts the dry run.
+- Operational documentation explains that application history is not a NAS backup.
+- Backup restore is proven from a disposable database, and rollback documentation distinguishes image rollback from database restore.
+- Production deployment configuration keeps NAS secrets and host paths outside Git and records the deployed immutable image tags.
+
+## 16. Verification Strategy
+
+### Unit Tests
+
+- Metadata formatting and fallbacks.
+- Camelot conversion.
+- PersonalGenre precedence and evidence.
+- Match scoring and confidence decisions.
+- Smart playlist rules.
+- Destination and filename calculation.
+- Root policy decisions.
+
+### Integration Tests
+
+- API contracts and Problem Details.
+- PostgreSQL migrations, constraints, transactions, and optimistic concurrency through EF Core/Npgsql.
+- Root canonicalization and path traversal rejection.
+- Scan/reconciliation behavior.
+- Tag write/read round trips for every supported format.
+- Artwork replacement and history restoration.
+- Range responses and waveform cache.
+- Pending apply/move and collision rollback.
+- M3U8 path translation.
+- Session tracklist association.
+
+### Runtime Acceptance
+
+- Use a disposable fixture library that mirrors all four roots.
+- Include malformed tags, missing artwork, multiple artwork frames, ambiguous remixes, duplicate files, collisions, moved files, and long sessions.
+- Never use the production music mount for automated tests.
+
+## 17. MVP Completion Checklist
+
+- [ ] Docker Compose runs reliably on the NAS.
+- [ ] All roots are indexed and governed by their policy.
+- [ ] Explorer/search/filter/player workflows work from a PC browser.
+- [ ] Original tags can be edited atomically and undone for one year.
+- [ ] MusicBrainz, Discogs, AcoustID, BPM, key, and waveform workflows operate through durable jobs.
+- [ ] Main reanalysis is approval-only.
+- [ ] Pending processing requires manual start, PersonalGenre/artwork review, and movement confirmation.
+- [ ] Remember remains in place with PersonalGenre Remember.
+- [ ] Smart/manual playlists and M3U8 exports work for AIMP/Traktor paths.
+- [ ] Duplicates are identified and compared without automatic deletion.
+- [ ] Sessions remain independent and display their TXT tracklists.
+- [ ] Spanish UI, light/dark themes, keyboard shortcuts, and persistent notifications are complete.
+- [ ] Representative-library dry run is approved before production use.
+
+## 18. Future Backlog
+
+- Authelia-protected remote access.
+- Evaluate OpenSubsonic-compatible access for external Windows and Android applications. OpenSubsonic is the open evolution of the legacy Subsonic API and provides an interoperability target for desktop and mobile clients. At implementation time, compare the currently maintained OpenSubsonic-compatible servers and an adapter exposed by this application; do not preselect a server now. Decide whether to deploy the selected server beside this application or expose a compatible API only after proving representative Windows and Android client compatibility for catalog tracks and Sessions, streaming with HTTP Range or transcoding as applicable, artwork and metadata, and playlists where product rules permit them. Preserve Sessions as a separate core collection even if a compatibility boundary presents them to clients. Document authentication, authorization, transport security, rate limiting, and exposure risks before any use beyond the LAN.
+- Authorized Beatport provider.
+- Manual assisted Beatport URL import.
+- Session track timestamps and waveform markers.
+- Click-to-seek tracklist entries.
+- Tracklist editing.
+- Traktor NML export.
+- PersonalGenre suggestion tuning from approved decisions.

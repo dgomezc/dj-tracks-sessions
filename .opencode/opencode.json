@@ -1,0 +1,23 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "blazorblueprint": {
+      "type": "local",
+      "command": ["npx", "-y", "@blazorblueprint/mcp@latest"],
+      "environment": {
+        "BLAZORBLUEPRINT_VERSION": "3"
+      },
+      "enabled": true,
+      "timeout": 30000
+    },
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "-y", "@playwright/mcp@latest", "--headless"],
+      "enabled": true,
+      "timeout": 30000
+    }
+  },
+  "skills": {
+    "paths": [".opencode/skills"]
+  }
+}
