@@ -1,0 +1,33 @@
+@inject IJSRuntime JS
+
+<BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" @onclick="ToggleTheme" aria-label="Cambiar tema">
+    @if (IsDark)
+    {
+        <span>Modo claro</span>
+    }
+    else
+    {
+        <span>Modo oscuro</span>
+    }
+</BbButton>
+
+@code {
+    private bool IsDark;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        IsDark = await JS.InvokeAsync<bool>("djTracksSessionsTheme.isDark");
+        StateHasChanged();
+    }
+
+    private async Task ToggleTheme()
+    {
+        IsDark = !IsDark;
+        await JS.InvokeVoidAsync("djTracksSessionsTheme.setDark", IsDark);
+    }
+}

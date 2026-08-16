@@ -1,8 +1,18 @@
+using BlazorBlueprint.Components;
+using DjTracksSessions.Web;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
+builder.Services.AddBlazorBlueprintComponents();
 
 var app = builder.Build();
 
-app.MapGet("/", () => Results.Ok(new { application = "DjTracksSessions.Web" }));
+app.MapStaticAssets();
+app.UseAntiforgery();
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
 
 app.Run();
 

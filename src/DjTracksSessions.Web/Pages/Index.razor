@@ -1,0 +1,87 @@
+@page "/"
+
+<section class="page-section">
+    <header class="hero-block">
+        <div class="hero-copy">
+            <p class="eyebrow">Espacio de trabajo</p>
+            <h2>Tu música, con cada flujo en su lugar.</h2>
+            <p>Una base clara para explorar la biblioteca, revisar metadatos y conservar las sesiones fuera del catálogo.</p>
+        </div>
+        <aside class="system-state" aria-label="Estado de la aplicación">
+            <span class="status-dot" aria-hidden="true"></span>
+            <div>
+                <strong>Base de aplicación activa</strong>
+                <span>Sin biblioteca conectada todavía</span>
+            </div>
+        </aside>
+    </header>
+
+    <section class="workspace-section" aria-labelledby="biblioteca-title">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Biblioteca y escucha</p>
+                <h3 id="biblioteca-title">Explorer / Player</h3>
+            </div>
+            <span class="section-label">Flujo de catálogo</span>
+        </div>
+
+        <div class="overview-grid explorer-grid">
+            <article class="overview-card overview-card-featured" id="explorador">
+                <div class="card-index">01</div>
+                <p class="card-kicker">Biblioteca</p>
+                <h4>Explorador</h4>
+                <p>Catálogo, búsqueda y organización de la colección principal, con una lectura densa para escritorio.</p>
+                <span class="status-chip status-chip-muted">Próximamente</span>
+            </article>
+
+            <article class="overview-card" id="reproductor">
+                <div class="card-index">02</div>
+                <p class="card-kicker">Escucha</p>
+                <h4>Reproductor</h4>
+                <p>Cola global y controles compartidos para la música catalogada.</p>
+                <div class="signal-lines" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+                <span class="status-chip status-chip-muted">Sin cola</span>
+            </article>
+        </div>
+    </section>
+
+    <section class="workspace-section" aria-labelledby="metadatos-title">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Revisión controlada</p>
+                <h3 id="metadatos-title">Analyzer / Tagger</h3>
+            </div>
+            <span class="section-label">Flujo de metadatos</span>
+        </div>
+
+        <div class="overview-grid">
+            <article class="overview-card" id="analizador">
+                <div class="card-index">03</div>
+                <p class="card-kicker">Propuestas</p>
+                <h4>Analizador</h4>
+                <p>Revisión de coincidencias, evidencia y metadatos pendientes antes de cualquier cambio.</p>
+                <span class="status-chip status-chip-safe">Revisión manual</span>
+            </article>
+
+            <article class="overview-card" id="etiquetador">
+                <div class="card-index">04</div>
+                <p class="card-kicker">Aplicación</p>
+                <h4>Etiquetador</h4>
+                <p>Vista de cambios confirmados, etiquetas y operaciones seguras sobre los archivos.</p>
+                <span class="status-chip status-chip-safe">Confirmación requerida</span>
+            </article>
+        </div>
+    </section>
+
+    <section class="sessions-panel" id="sesiones" aria-labelledby="sesiones-title">
+        <div>
+            <p class="eyebrow">Colección independiente</p>
+            <h3 id="sesiones-title">Sesiones</h3>
+            <p>Una experiencia separada para mixes personales y sus tracklists TXT, sin entrar en el catálogo ni en la cola global.</p>
+        </div>
+        <div class="sessions-panel-state">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span>Preparado para una biblioteca de sesiones</span>
+        </div>
+    </section>
+</section>

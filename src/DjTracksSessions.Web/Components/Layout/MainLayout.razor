@@ -1,0 +1,74 @@
+@inherits LayoutComponentBase
+
+<BbSidebarProvider Variant="SidebarVariant.Floating" DefaultOpen="true">
+    <div class="app-shell">
+        <BbSidebar Collapsible="true">
+            <BbSidebarHeader>
+                <BbSidebarHeaderContent>
+                    <div class="brand-lockup">
+                        <span class="brand-mark" aria-hidden="true">DTS</span>
+                        <span class="brand-title">DJ Tracks &amp; Sessions</span>
+                        <BbSidebarHeaderInfo>
+                            <span class="brand-subtitle">Biblioteca personal</span>
+                        </BbSidebarHeaderInfo>
+                    </div>
+                </BbSidebarHeaderContent>
+            </BbSidebarHeader>
+
+            <BbSidebarContent>
+                <section class="nav-group">
+                    <h2 class="nav-group-title">Explorer / Player</h2>
+                    <BbSidebarMenu Class="sidebar-menu">
+                        <BbSidebarMenuItem>
+                            <BbSidebarMenuButton Href="/#explorador" Match="NavLinkMatch.All" Tooltip="Explorador" Class="sidebar-menu-button"><LucideIcon Name="library-big" Size="16" Class="sidebar-menu-icon" />Explorador</BbSidebarMenuButton>
+                        </BbSidebarMenuItem>
+                        <BbSidebarMenuItem>
+                            <BbSidebarMenuButton Href="/#reproductor" Match="NavLinkMatch.All" Tooltip="Reproductor" Class="sidebar-menu-button"><LucideIcon Name="play" Size="16" Class="sidebar-menu-icon" />Reproductor</BbSidebarMenuButton>
+                        </BbSidebarMenuItem>
+                    </BbSidebarMenu>
+                </section>
+
+                <section class="nav-group">
+                    <h2 class="nav-group-title">Analyzer / Tagger</h2>
+                    <BbSidebarMenu Class="sidebar-menu">
+                        <BbSidebarMenuItem>
+                            <BbSidebarMenuButton Href="/#analizador" Match="NavLinkMatch.All" Tooltip="Analizador" Class="sidebar-menu-button"><LucideIcon Name="scan-search" Size="16" Class="sidebar-menu-icon" />Analizador</BbSidebarMenuButton>
+                        </BbSidebarMenuItem>
+                        <BbSidebarMenuItem>
+                            <BbSidebarMenuButton Href="/#etiquetador" Match="NavLinkMatch.All" Tooltip="Etiquetador" Class="sidebar-menu-button"><LucideIcon Name="tag" Size="16" Class="sidebar-menu-icon" />Etiquetador</BbSidebarMenuButton>
+                        </BbSidebarMenuItem>
+                    </BbSidebarMenu>
+                </section>
+
+                <section class="nav-group">
+                    <h2 class="nav-group-title">Sesiones</h2>
+                    <BbSidebarMenu Class="sidebar-menu">
+                        <BbSidebarMenuItem>
+                            <BbSidebarMenuButton Href="/#sesiones" Match="NavLinkMatch.All" Tooltip="Biblioteca de sesiones" Class="sidebar-menu-button"><LucideIcon Name="folder-music" Size="16" Class="sidebar-menu-icon" />Biblioteca de sesiones</BbSidebarMenuButton>
+                        </BbSidebarMenuItem>
+                    </BbSidebarMenu>
+                </section>
+            </BbSidebarContent>
+        </BbSidebar>
+
+        <BbSidebarInset>
+            <div class="shell-frame">
+                <header class="shell-header">
+                    <div class="shell-header-copy">
+                        <BbSidebarTrigger />
+                        <p class="eyebrow">Panel de control</p>
+                        <h1 class="shell-title">DJ Tracks &amp; Sessions</h1>
+                    </div>
+
+                    <ThemeToggle />
+                </header>
+
+                <main class="shell-main">
+                    @Body
+                </main>
+            </div>
+        </BbSidebarInset>
+    </div>
+</BbSidebarProvider>
+
+<BbPortalHost />

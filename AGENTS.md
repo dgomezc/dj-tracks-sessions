@@ -14,6 +14,7 @@ These rules are mandatory for every human or AI contributor.
 - Load `.opencode/skills/execute-plan-work-unit/SKILL.md` for every implementation or correction of a `PLAN.md` work unit.
 - Load `.opencode/skills/dotnet-vertical-slice/SKILL.md` when changing API slices, contracts, FluentResults, or FluentValidation behavior.
 - Load `.opencode/skills/audio-filesystem-safety/SKILL.md` before touching scanning, tags, artwork, rename, move, delete, or reconciliation behavior.
+- Load `.opencode/skills/frontend-design/SKILL.md` before designing or visually refactoring Blazor UI, layouts, themes, or UI states.
 - Use the Blazor Blueprint MCP for exact component APIs, setup, patterns, and version changes. Do not guess component parameters.
 - Use Playwright MCP only when a running UI needs interactive inspection or manual-flow verification. It does not replace automated Playwright .NET tests.
 - Keep MCP queries narrow and task-specific to avoid unnecessary context.
