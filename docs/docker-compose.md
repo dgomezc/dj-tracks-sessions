@@ -19,3 +19,5 @@ Optional variables:
 - `WEB_PORT` defaults to `8081`
 
 The API uses `ConnectionStrings__Postgres` to reach the PostgreSQL service on the internal Compose network.
+
+For the local WSL verification flow, use `scripts/wsl/compose-verify.sh` with disposable fixture roots. The exact command set is documented in [local-gate.md](local-gate.md).

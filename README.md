@@ -45,3 +45,5 @@ Docker Compose will mount four independently configured roots:
 Implement [PLAN.md](PLAN.md) in order. Complete and verify one phase before starting the next. Do not implement future items as part of the MVP unless the plan is explicitly amended.
 
 Development runs from a GitHub feature branch in the WSL Linux filesystem. Local build, test, and Compose verification is the delivery gate; test deployments use locally built immutable images transferred directly to the NAS. See [PLAN.md, Development And Test Deployment Workflow](PLAN.md#151-development-and-test-deployment-workflow).
+
+For the repeatable WSL gate commands, see [docs/local-gate.md](docs/local-gate.md).
