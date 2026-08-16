@@ -1,0 +1,77 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-djtracksessions}
+      POSTGRES_USER: ${POSTGRES_USER:-djtracksessions}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - djtracksessions-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-djtracksessions} -d ${POSTGRES_DB:-djtracksessions}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  api:
+    build:
+      context: .
+      dockerfile: src/DjTracksSessions.Api/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=${POSTGRES_DB:-djtracksessions};Username=${POSTGRES_USER:-djtracksessions};Password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      MAIN_LIBRARY_PATH: /music/main
+      PENDING_LIBRARY_PATH: /music/pending
+      REMEMBER_LIBRARY_PATH: /music/remember
+      SESSIONS_LIBRARY_PATH: /music/sessions
+      APP_DATA_PATH: /app/data
+    volumes:
+      - type: bind
+        source: ${MAIN_LIBRARY_PATH:?MAIN_LIBRARY_PATH is required}
+        target: /music/main
+      - type: bind
+        source: ${PENDING_LIBRARY_PATH:?PENDING_LIBRARY_PATH is required}
+        target: /music/pending
+      - type: bind
+        source: ${REMEMBER_LIBRARY_PATH:?REMEMBER_LIBRARY_PATH is required}
+        target: /music/remember
+      - type: bind
+        source: ${SESSIONS_LIBRARY_PATH:?SESSIONS_LIBRARY_PATH is required}
+        target: /music/sessions
+      - djtracksessions-app-data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${API_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  web:
+    build:
+      context: .
+      dockerfile: src/DjTracksSessions.Web/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_URLS: http://+:8080
+    depends_on:
+      api:
+        condition: service_started
+    ports:
+      - "${WEB_PORT:-8081}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  djtracksessions-app-data:
+  djtracksessions-postgres-data:
