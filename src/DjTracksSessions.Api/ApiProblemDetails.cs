@@ -23,13 +23,25 @@ public static class ApiProblemDetails
             ? status
             : StatusCodes.Status400BadRequest;
 
+        var extensions = new Dictionary<string, object?>
+        {
+            [ErrorCodeKey] = GetErrorCode(error)
+        };
+
+        foreach (var metadata in error.Metadata)
+        {
+            if (metadata.Key is "StatusCode" or ErrorCodeKey)
+            {
+                continue;
+            }
+
+            extensions[metadata.Key] = metadata.Value;
+        }
+
         var problem = Results.Problem(
             title: error.Message,
             statusCode: statusCode,
-            extensions: new Dictionary<string, object?>
-            {
-                [ErrorCodeKey] = GetErrorCode(error)
-            });
+            extensions: extensions);
 
         return problem;
     }
