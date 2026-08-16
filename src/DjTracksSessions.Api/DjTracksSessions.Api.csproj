@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentResults" Version="4.0.0" />
     <ProjectReference Include="..\DjTracksSessions.Contracts\DjTracksSessions.Contracts.csproj" />
   </ItemGroup>
 </Project>
