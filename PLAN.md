@@ -65,18 +65,15 @@ PostgreSQL requirements:
 ```text
 Desktop browser
   |
-  +-- MusicCatalog.Web (Blazor Interactive Server)
+  +-- DjTracksSessions.Web (Blazor Interactive Server)
           |
           +-- generated/typed HTTP client
                   |
-                  +-- MusicCatalog.Api
+                  +-- DjTracksSessions.Api
                         +-- Vertical slices
                         +-- Background job worker
-                        +-- PostgreSQL through EF Core/Npgsql
-                        +-- NAS filesystem adapters
-                        +-- Tag and image adapters
-                        +-- FFmpeg/Chromaprint adapters
-                        +-- Metadata provider adapters
+                        +-- DjTrackSessions.Domain (entities, value objects, invariants)
+                        +-- DjTrackSessions.Infrastructure (EF Core/Npgsql, migrations, adapters)
 ```
 
 ### 4.1 Project Layout
@@ -96,8 +93,13 @@ src/
       Duplicates/
       History/
       Sessions/
-    Domain/
-    Infrastructure/
+  DjTrackSessions.Domain/
+    Entities and value objects
+    Domain invariants
+  DjTrackSessions.Infrastructure/
+    EF Core Code First DbContext and Fluent configurations
+    EF Core migrations
+    Database, filesystem, provider, image, and audio-tool adapters
   DjTracksSessions.Web/
   DjTracksSessions.Contracts/
 tests/
@@ -105,17 +107,17 @@ tests/
   DjTracksSessions.IntegrationTests/
 ```
 
-Do not create separate class-library projects for every conceptual layer until a real dependency boundary requires them.
+`DjTracksSessions.Api` owns the vertical-slice `Features` directories. Each feature contains its endpoint, queries, commands, validations, mappers, handlers, and behavior tests; it uses `DjTrackSessions.Domain` for entities and invariants and `DjTrackSessions.Infrastructure` adapters. Do not move persistence or external implementations into the API, turn slices into generic horizontal folders, or create further layer projects without a real dependency boundary.
 
 ### 4.2 Slice Contract
 
 Each command/query slice should contain:
 
-- Request/route contract.
+- Endpoint and request/route contract.
+- Query or command.
 - FluentValidation validator.
 - Handler.
 - FluentResults success/failure result.
-- Endpoint and HTTP mapping.
 - Slice-specific mapping.
 - Behavior tests.
 
@@ -421,7 +423,7 @@ Work units:
 1. Solution, projects, dependency direction, and test projects.
 2. API Problem Details and FluentResults mapping.
 3. FluentValidation registration and explicit async validation pipeline.
-4. PostgreSQL schema, reviewed EF Core migrations through Npgsql, and health checks.
+4. Code First PostgreSQL schema, reviewed EF Core migrations through Npgsql, and health checks.
 5. Dockerfiles and Docker Compose with four music mounts, PostgreSQL, and persistent volumes.
 6. Blazor Blueprint shell, Spanish UI, light/dark themes, and separate main navigation areas.
 7. Durable job and notification primitives.

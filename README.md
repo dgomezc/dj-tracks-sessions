@@ -27,6 +27,8 @@ Read these documents before changing the project:
 - MusicBrainz, Discogs, AcoustID, Chromaprint, and FFmpeg.
 - Docker Compose on a Linux x86-64 NAS.
 
+`DjTracksSessions.Api` owns vertical-slice `Features`, including endpoints, queries, commands, validations, mappers, handlers, and behavior tests. Slices use framework-independent entities and invariants from `DjTrackSessions.Domain`; `DjTrackSessions.Infrastructure` owns Code First EF Core, Fluent configurations, migrations, and external adapters.
+
 ## Library Roots
 
 Docker Compose will mount four independently configured roots:

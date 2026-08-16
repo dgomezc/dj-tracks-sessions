@@ -2,6 +2,8 @@
   <Project Path="src/DjTracksSessions.Api/DjTracksSessions.Api.csproj" />
   <Project Path="src/DjTracksSessions.Contracts/DjTracksSessions.Contracts.csproj" />
   <Project Path="src/DjTracksSessions.Web/DjTracksSessions.Web.csproj" />
+  <Project Path="src/DjTrackSessions.Domain/DjTrackSessions.Domain.csproj" />
+  <Project Path="src/DjTrackSessions.Infrastructure/DjTrackSessions.Infrastructure.csproj" />
   <Project Path="tests/DjTracksSessions.IntegrationTests/DjTracksSessions.IntegrationTests.csproj" />
   <Project Path="tests/DjTracksSessions.UnitTests/DjTracksSessions.UnitTests.csproj" />
 </Solution>

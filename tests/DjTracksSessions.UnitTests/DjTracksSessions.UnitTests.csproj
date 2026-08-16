@@ -18,5 +18,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\DjTracksSessions.Contracts\DjTracksSessions.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\DjTrackSessions.Domain\DjTrackSessions.Domain.csproj" />
   </ItemGroup>
 </Project>

@@ -24,8 +24,9 @@ This file records settled decisions. Change them only with explicit product appr
 - .NET 10, ASP.NET Core API, and Blazor Interactive Server.
 - Blazor Blueprint UI with persistent light and dark themes.
 - API and frontend are separate projects and runtime boundaries.
-- Vertical Slice Architecture with FluentResults and FluentValidation.
+- `DjTracksSessions.Api` owns vertical-slice `Features`. Each feature contains its endpoint, queries, commands, validations, mappers, handlers, and behavior tests; it uses Domain invariants/entities and Infrastructure adapters without owning persistence or external implementations.
 - Entity Framework Core with the Npgsql provider is the persistence API; PostgreSQL is the only production database.
+- EF Core uses Code First. `DjTrackSessions.Domain` contains framework-independent entities, value objects, and invariants; `DjTrackSessions.Infrastructure` contains the DbContext, Fluent entity configurations, migrations, and external-service adapters.
 - Interface in Spanish, optimized for desktop use.
 
 ## Files And Collections

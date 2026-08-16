@@ -33,11 +33,11 @@ These rules are mandatory for every human or AI contributor.
 
 ## Architecture
 
-- Organize behavior by vertical slice, not by global technical folders such as `Controllers`, `Services`, or `Repositories`.
-- A slice owns its request, response, endpoint, validator, handler, mapping, and tests.
-- Use a small domain layer only for invariants shared by multiple slices.
-- Put filesystem, database, provider, image, and audio-tool implementations behind infrastructure adapters.
-- Use Entity Framework Core with the Npgsql provider for all application persistence. PostgreSQL is the only supported production database.
+- `DjTracksSessions.Api` owns vertical-slice `Features`; each slice contains its endpoint, queries, commands, validations, mappers, handlers, and behavior tests, not global technical folders such as `Controllers`, `Services`, or `Repositories`.
+- Slices use `DjTrackSessions.Domain` for entities and invariants and `DjTrackSessions.Infrastructure` adapters; do not move persistence or external implementations into the API.
+- `DjTrackSessions.Domain` owns framework-independent entities, value objects, and domain invariants; it must not reference EF Core.
+- `DjTrackSessions.Infrastructure` owns the EF Core Code First `DbContext`, Fluent `IEntityTypeConfiguration<T>` mappings, migrations, and filesystem, database, provider, image, and audio-tool adapters.
+- Use Entity Framework Core Code First with the Npgsql provider for all application persistence. PostgreSQL is the only supported production database.
 - Create schema changes through reviewed EF Core migrations. Do not use `EnsureCreated` for application startup or production deployment.
 - Return expected failures through `FluentResults`. Do not use exceptions for validation, missing matches, collisions, or other expected outcomes.
 - Use `FluentValidation` explicitly and asynchronously. Do not rely on ASP.NET synchronous auto-validation.

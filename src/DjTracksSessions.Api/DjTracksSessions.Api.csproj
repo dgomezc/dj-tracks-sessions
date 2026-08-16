@@ -14,5 +14,6 @@
     <PackageReference Include="FluentValidation" Version="12.0.0" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0" />
     <ProjectReference Include="..\DjTracksSessions.Contracts\DjTracksSessions.Contracts.csproj" />
+    <ProjectReference Include="..\DjTrackSessions.Infrastructure\DjTrackSessions.Infrastructure.csproj" />
   </ItemGroup>
 </Project>
