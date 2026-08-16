@@ -20,5 +20,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\DjTracksSessions.Api\DjTracksSessions.Api.csproj" />
     <ProjectReference Include="..\..\src\DjTracksSessions.Contracts\DjTracksSessions.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\DjTrackSessions.Infrastructure\DjTrackSessions.Infrastructure.csproj" />
   </ItemGroup>
 </Project>
