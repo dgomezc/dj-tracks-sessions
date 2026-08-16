@@ -16,7 +16,9 @@ Run development verification from WSL with the working tree on the Linux filesys
 - `build.sh` restores and builds the solution in Release mode.
 - `test.sh` runs the unit and integration tests in Release mode.
 - `compose-verify.sh` starts the Compose stack against disposable local roots and an ephemeral PostgreSQL volume, then checks the API health endpoint and the Web root page.
-- `build-images.sh` builds the API and Web images for `linux/amd64` from the exact current Git commit and tags them with that full commit SHA.
+- `build-images.sh` builds the API, Web, and migration images for `linux/amd64` from the exact current Git commit and tags them with that full commit SHA.
+
+The NAS deployment workflow is separate and documented in [deployment/nas-test.md](deployment/nas-test.md).
 
 ## Required Tools
 

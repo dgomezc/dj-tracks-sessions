@@ -19,3 +19,8 @@ ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "DjTracksSessions.Api.dll"]
+
+FROM build AS migrations
+RUN dotnet tool install --global dotnet-ef --version 10.0.0
+ENV PATH="${PATH}:/root/.dotnet/tools"
+ENTRYPOINT ["dotnet-ef", "database", "update", "--project", "src/DjTrackSessions.Infrastructure/DjTrackSessions.Infrastructure.csproj", "--startup-project", "src/DjTracksSessions.Api/DjTracksSessions.Api.csproj"]

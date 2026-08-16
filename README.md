@@ -47,3 +47,5 @@ Implement [PLAN.md](PLAN.md) in order. Complete and verify one phase before star
 Development runs from a GitHub feature branch in the WSL Linux filesystem. Local build, test, and Compose verification is the delivery gate; test deployments use locally built immutable images transferred directly to the NAS. See [PLAN.md, Development And Test Deployment Workflow](PLAN.md#151-development-and-test-deployment-workflow).
 
 For the repeatable WSL gate commands, see [docs/local-gate.md](docs/local-gate.md).
+
+For the NAS test deployment flow, see [docs/deployment/nas-test.md](docs/deployment/nas-test.md).

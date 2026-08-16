@@ -1,0 +1,38 @@
+services:
+  postgres:
+    volumes:
+      - type: bind
+        source: ${NAS_POSTGRES_DATA_PATH:?NAS_POSTGRES_DATA_PATH is required}
+        target: /var/lib/postgresql/data
+
+  migrations:
+    image: ${MIGRATIONS_IMAGE_NAME:?MIGRATIONS_IMAGE_NAME is required}:${IMAGE_TAG:?IMAGE_TAG is required}
+    environment:
+      ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=${POSTGRES_DB:-djtracksessions};Username=${POSTGRES_USER:-djtracksessions};Password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    build: null
+    image: ${API_IMAGE_NAME:?API_IMAGE_NAME is required}:${IMAGE_TAG:?IMAGE_TAG is required}
+    volumes:
+      - type: bind
+        source: ${NAS_MAIN_LIBRARY_PATH:?NAS_MAIN_LIBRARY_PATH is required}
+        target: /music/main
+      - type: bind
+        source: ${NAS_PENDING_LIBRARY_PATH:?NAS_PENDING_LIBRARY_PATH is required}
+        target: /music/pending
+      - type: bind
+        source: ${NAS_REMEMBER_LIBRARY_PATH:?NAS_REMEMBER_LIBRARY_PATH is required}
+        target: /music/remember
+      - type: bind
+        source: ${NAS_SESSIONS_LIBRARY_PATH:?NAS_SESSIONS_LIBRARY_PATH is required}
+        target: /music/sessions
+      - type: bind
+        source: ${NAS_APP_DATA_PATH:?NAS_APP_DATA_PATH is required}
+        target: /app/data
+
+  web:
+    build: null
+    image: ${WEB_IMAGE_NAME:?WEB_IMAGE_NAME is required}:${IMAGE_TAG:?IMAGE_TAG is required}

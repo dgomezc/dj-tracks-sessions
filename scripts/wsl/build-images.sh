@@ -24,3 +24,11 @@ docker buildx build \
   -t "djtracksessions-web:${IMAGE_TAG}" \
   -f "${ROOT_DIR}/src/DjTracksSessions.Web/Dockerfile" \
   "${ROOT_DIR}"
+
+docker buildx build \
+  --platform linux/amd64 \
+  --load \
+  -t "djtracksessions-api-migrations:${IMAGE_TAG}" \
+  -f "${ROOT_DIR}/src/DjTracksSessions.Api/Dockerfile" \
+  --target migrations \
+  "${ROOT_DIR}"
