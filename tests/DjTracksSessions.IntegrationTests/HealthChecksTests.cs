@@ -85,6 +85,29 @@ public sealed class HealthChecksTests
         Assert.DoesNotContain("test exception", json);
     }
 
+    [Fact]
+    public async Task OpenApi_document_returns_json_with_api_metadata()
+    {
+        var response = await _client.GetAsync("/openapi/v1.json");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("json", response.Content.Headers.ContentType?.MediaType ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal("DJ Tracks & Sessions API", document.RootElement.GetProperty("info").GetProperty("title").GetString());
+        Assert.Equal("v1", document.RootElement.GetProperty("info").GetProperty("version").GetString());
+        Assert.True(document.RootElement.GetProperty("paths").TryGetProperty("/examples/{id}", out _));
+    }
+
+    [Fact]
+    public async Task Scalar_reference_returns_html()
+    {
+        var response = await _client.GetAsync("/scalar");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("html", response.Content.Headers.ContentType?.MediaType ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+    }
+
     private sealed class HealthyDatabaseHealthProbe : IDatabaseHealthProbe
     {
         public Task<HealthCheckResult> CheckAsync(CancellationToken cancellationToken)

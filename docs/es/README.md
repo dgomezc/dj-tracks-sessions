@@ -63,3 +63,5 @@ El desarrollo se ejecuta desde una rama de funcionalidades de GitHub en el siste
 Para los comandos repetibles de la puerta de WSL, consulta [docs/local-gate.md](local-gate.md).
 
 Para el flujo manual de despliegue de prueba en el NAS, consulta [docs/deployment/nas-manual.md](deployment/nas-manual.md).
+
+Para el desarrollo local de la API y las pruebas con Scalar, consulta [api-development.md](api-development.md).

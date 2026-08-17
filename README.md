@@ -61,3 +61,5 @@ Development runs from a GitHub feature branch in the WSL Linux filesystem. Local
 For the repeatable WSL gate commands, see [docs/local-gate.md](docs/local-gate.md).
 
 For the manual NAS test deployment flow, see [docs/deployment/nas-manual.md](docs/deployment/nas-manual.md).
+
+For local API development and Scalar testing, see [docs/api-development.md](docs/api-development.md).

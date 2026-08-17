@@ -6,16 +6,29 @@ using DjTrackSessions.Infrastructure;
 using FluentResults;
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Scalar.AspNetCore;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("Postgres");
 
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, _, _) =>
+    {
+        document.Info.Title = "DJ Tracks & Sessions API";
+        document.Info.Version = "v1";
+        return Task.CompletedTask;
+    });
+});
 builder.Services.AddValidatorsFromAssemblyContaining<ValidationExampleRequestValidator>();
 builder.Services.AddInfrastructurePersistence(connectionString);
 
 var app = builder.Build();
+
+app.MapOpenApi();
+app.MapScalarApiReference(options => options.WithTitle("DJ Tracks & Sessions API"));
 
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
@@ -49,7 +62,10 @@ app.MapGet("/examples/{id}", (int id) =>
     }
 
     return ApiProblemDetails.FromResult(Result.Fail<object>(ApiProblemDetails.NotFound("Example not found.", DjTracksSessions.Contracts.ApiErrorCodes.ExampleNotFound)), value => Results.Ok(value));
-});
+})
+    .WithName("GetExample")
+    .WithSummary("Get an example by ID")
+    .WithDescription("Returns the sample payload for ID 1 or a problem details response for other IDs.");
 
 app.MapPost("/validation-examples", async (
     ValidationExampleRequest request,
@@ -63,7 +79,10 @@ app.MapPost("/validation-examples", async (
     return ApiProblemDetails.FromResult(
         validationResult,
         validRequest => Results.Created($"/validation-examples/{validRequest.Name}", new ValidationExampleResponse(validRequest.Name)));
-});
+})
+    .WithName("CreateValidationExample")
+    .WithSummary("Create a validation example")
+    .WithDescription("Validates the request and returns the created example name.");
 
 app.Run();
 

@@ -26,7 +26,10 @@ public static class DatabaseConnectionDiagnosticEndpoint
                     new DatabaseConnectionDiagnosticResponse("unavailable"),
                     statusCode: StatusCodes.Status503ServiceUnavailable);
             }
-        });
+        })
+            .WithName("GetDatabaseConnectionDiagnostic")
+            .WithSummary("Check database connectivity")
+            .WithDescription("Returns only whether the configured database probe is connected or unavailable.");
 
         return endpoints;
     }
