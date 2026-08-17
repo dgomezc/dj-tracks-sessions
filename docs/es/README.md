@@ -10,7 +10,7 @@ Repositorio canónico: <https://github.com/dgomezc/dj-tracks-and-sessions>
 
 ## Estado
 
-Fase de planificación. La implementación aún no ha comenzado.
+La implementación de la base está en curso.
 
 Lee estos documentos antes de modificar el proyecto:
 
@@ -31,6 +31,18 @@ Lee estos documentos antes de modificar el proyecto:
 
 `DjTracksSessions.Api` es propietaria de `Features` organizadas como vertical slices, incluidos endpoints, consultas, comandos, validaciones, mappers, handlers y pruebas de comportamiento. Los slices usan entidades e invariantes independientes del framework de `DjTrackSessions.Domain`; `DjTrackSessions.Infrastructure` es propietaria de EF Core Code First, las configuraciones Fluent, las migraciones y los adaptadores externos.
 
+## Configuración de base de datos
+
+La instancia PostgreSQL del NAS es la base de datos de desarrollo. Este repositorio despliega solo contenedores de aplicación: nunca crea, inicia, monta ni gestiona un contenedor o volumen de base de datos PostgreSQL.
+
+Para el desarrollo local de la API con el entorno `Development`, configura `ConnectionStrings:Postgres` en .NET User Secrets:
+
+```bash
+dotnet user-secrets set "ConnectionStrings:Postgres" "<connection-string>" --project src/DjTracksSessions.Api
+```
+
+User Secrets se usa solo en desarrollo local y no está disponible dentro de contenedores. Docker Compose y los despliegues en NAS deben proporcionar `ConnectionStrings__Postgres` mediante un archivo de entorno o secretos externo e ignorado. No incluyas datos de conexión en Git.
+
 ## Raíces de la biblioteca
 
 Docker Compose montará cuatro raíces configuradas de forma independiente:
@@ -46,8 +58,8 @@ Docker Compose montará cuatro raíces configuradas de forma independiente:
 
 Implementa [PLAN.md](PLAN.md) en orden. Completa y verifica una fase antes de comenzar la siguiente. No implementes elementos futuros como parte del MVP salvo que el plan se modifique explícitamente.
 
-El desarrollo se ejecuta desde una rama de funcionalidades de GitHub en el sistema de archivos Linux de WSL. La compilación, las pruebas y la verificación de Compose locales son la puerta de entrega; los despliegues de prueba usan imágenes inmutables construidas localmente y transferidas directamente al NAS. Consulta [PLAN.md, Flujo de desarrollo y despliegue de pruebas](PLAN.md#151-development-and-test-deployment-workflow).
+El desarrollo se ejecuta desde una rama de funcionalidades de GitHub en el sistema de archivos Linux de WSL. La compilación, las pruebas y las comprobaciones opcionales de imágenes `linux/amd64` locales son la puerta de entrega; las imágenes locales no se transfieren al NAS. Las pruebas de Compose en el NAS solo se realizan cuando una versión utilizable se clona y selecciona manualmente en el NAS. Consulta [PLAN.md, Flujo de desarrollo y despliegue de pruebas](PLAN.md#151-development-and-test-deployment-workflow).
 
 Para los comandos repetibles de la puerta de WSL, consulta [docs/local-gate.md](local-gate.md).
 
-Para el flujo de despliegue de prueba en el NAS, consulta [docs/deployment/nas-test.md](deployment/nas-test.md).
+Para el flujo manual de despliegue de prueba en el NAS, consulta [docs/deployment/nas-manual.md](deployment/nas-manual.md).

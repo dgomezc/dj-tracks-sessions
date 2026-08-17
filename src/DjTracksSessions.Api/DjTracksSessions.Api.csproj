@@ -7,6 +7,7 @@
     <AssemblyName>DjTracksSessions.Api</AssemblyName>
     <IsPackable>false</IsPackable>
     <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
+    <UserSecretsId>5e74b209-9ace-4270-b71f-f70fe2312216</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

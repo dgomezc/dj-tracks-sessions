@@ -37,7 +37,7 @@ Docker Compose must configure these host paths as read/write mounts:
 | `REMEMBER_LIBRARY_PATH` | `/music/remember` | Analyze/edit without moving; force `PersonalGenre=Remember` |
 | `SESSIONS_LIBRARY_PATH` | `/music/sessions` | Manual metadata only; separate player and TXT tracklists |
 | Application data | `/app/data` | Waveform cache and non-database runtime data |
-| PostgreSQL data | Managed Docker volume | Catalog, history, job state, playlists, notifications, and configuration |
+| PostgreSQL connection | External NAS-local secret/configuration | Catalog, history, job state, playlists, notifications, and configuration |
 
 Also configure:
 
@@ -47,14 +47,15 @@ Also configure:
 - NAS path to Windows/UNC translation profiles for playlist exports.
 - Scan/reconciliation interval.
 - Analysis concurrency, defaulting to one.
-- PostgreSQL database name, application user, password secret, and persistent volume.
+- PostgreSQL connection string from a NAS-local secret/configuration source for containers, or .NET User Secrets for local API development.
 
 Secrets must come from environment variables or Docker secrets and must never be committed.
 
 PostgreSQL requirements:
 
-- Run PostgreSQL as a dedicated Docker Compose service with a health check and named data volume.
-- Configure the API with an Npgsql connection string supplied through environment/secrets.
+- The NAS PostgreSQL instance is the development database. Compose must not deploy, start, mount, or own PostgreSQL containers or volumes.
+- Local API development in the `Development` environment reads `ConnectionStrings:Postgres` from .NET User Secrets. Configure containers with the external Npgsql connection string supplied as `ConnectionStrings__Postgres` through an ignored environment file or secret source; User Secrets are not available inside containers.
+- Provision a separate production database only for the future production deployment.
 - Use Entity Framework Core migrations as the only schema evolution mechanism.
 - Apply migrations through an explicit deployment/startup step that fails visibly; never silently create or recreate the database.
 - Use PostgreSQL constraints and transactions for invariants that cross persisted records.
@@ -382,14 +383,14 @@ Requirements:
 Git and the canonical GitHub repository, <https://github.com/dgomezc/dj-tracks-and-sessions>, are the source of truth. The normal delivery path is:
 
 1. Clone and keep the working tree in the WSL Linux filesystem on the Windows 11 development PC, not under `/mnt/c`, unless a documented tool constraint requires otherwise. This preserves Linux/Docker filesystem semantics and avoids cross-filesystem performance penalties.
-2. Develop on a feature branch in WSL. Run repeatable local builds, tests, and Docker Compose verification against disposable fixture roots and disposable PostgreSQL containers. This local verification is the delivery gate. Never mount the production music library in the local loop.
-3. After tests pass, build immutable `linux/amd64` application images locally from the exact Git commit and tag them with an explicit commit-derived tag. Push the feature branch and commits to GitHub manually. Do not use a floating `latest` tag.
-4. Transfer the exact tagged images directly from WSL to the NAS over SSH, such as by streaming a Docker image archive into the NAS image loader or through an equivalent parameterized script. The operation must preserve the selected tag without requiring a registry. The NAS host, SSH user, deployment path, and image tag are parameters; `192.168.68.100` is the current default LAN test target, not a hardcoded application value.
-5. Deploy a versioned test Compose stack that references the transferred commit-derived tag, uses NAS-only secrets and configuration, mounts only disposable or representative test roots initially, backs up PostgreSQL, runs an explicit migration step that fails visibly, starts services, and performs health and smoke checks.
+2. Develop on a feature branch in WSL. Run the local API in `Development` with its connection string in .NET User Secrets. Run repeatable local builds, tests, and Docker Compose verification against disposable fixture roots and an externally supplied non-versioned `ConnectionStrings__Postgres` value because containers cannot access User Secrets. This local verification is the delivery gate. Never mount the production music library in the local loop.
+3. After the local build/test gate passes, optionally build immutable `linux/amd64` application images locally from the exact Git commit with an explicit commit-derived tag as an architecture/image gate. Do not transfer those images to the NAS or use a floating `latest` tag. Push the feature branch and commits to GitHub manually.
+4. When a usable development/test version exists, manually clone or pull the repository on the NAS, checkout the selected branch, tag, or commit, prepare an ignored NAS-local environment/secret file and disposable roots, and validate the Compose configuration. No SSH connection to the NAS, WSL-to-NAS transfer, image archive, registry, or deployment script is used.
+5. From the selected NAS checkout, manually build/run the migration target against the external development PostgreSQL instance, run `docker compose up -d`, and perform health and smoke checks.
 
-The deployment operation must return a failure when image transfer/load, backup, migration, startup, health, or smoke verification fails. Credentials and secrets must not appear in source control, image tags, command arguments recorded by the repository, or deployment logs.
+The manual operator must stop when configuration, migration, startup, health, or smoke verification fails. Credentials and secrets must not appear in source control, documented command arguments, or deployment logs.
 
-Rollback selects the previous immutable image tag. Restore the pre-migration database backup only when the prior application version is incompatible with the migrated schema; never attempt an implicit schema downgrade. The deployment documentation must state the migration compatibility boundary and make backup, migration, and rollback failures visible.
+Rollback selects the previous immutable image tag. Restore an operator-created pre-migration database backup only when the prior application version is incompatible with the migrated schema; never attempt an implicit schema downgrade. The deployment documentation must state the migration compatibility boundary and make migration and rollback failures visible.
 
 GitHub Actions automation and publishing images to GHCR may be evaluated later. Neither is part of the current plan or delivery gate.
 
@@ -424,21 +425,21 @@ Work units:
 2. API Problem Details and FluentResults mapping.
 3. FluentValidation registration and explicit async validation pipeline.
 4. Code First PostgreSQL schema, reviewed EF Core migrations through Npgsql, and health checks.
-5. Dockerfiles and Docker Compose with four music mounts, PostgreSQL, and persistent volumes.
+5. Dockerfiles and Docker Compose with four music mounts, an external PostgreSQL connection, and an application-data persistent volume.
 6. Blazor Blueprint shell, Spanish UI, light/dark themes, and separate main navigation areas.
 7. Durable job and notification primitives.
 8. Repeatable local WSL commands or scripts for build, test, Compose verification, and immutable `linux/amd64` image builds from an exact Git commit.
-9. Versioned NAS test Compose configuration and one parameterized WSL-to-NAS deployment operation covering direct exact-tag image transfer/load, pre-migration backup, explicit migration, startup, health checks, and smoke checks.
+9. Manual NAS test deployment documentation covering clone-on-NAS version selection, NAS-local configuration, disposable roots, Compose validation, explicit external-database migration, startup, health checks, smoke checks, rollback, and cleanup.
 
 Exit criteria:
 
 - Compose starts API and Web on `linux/amd64`.
 - Health checks verify database, configured mounts, and required tools.
 - Frontend communicates only through API contracts.
-- Integration tests run against disposable PostgreSQL containers and filesystem roots.
+- Persistence integration tests run against disposable PostgreSQL containers; Compose verification uses an externally supplied non-versioned connection string and disposable filesystem roots.
 - Local verification fails before image build or deployment when required builds, tests, or Compose checks fail; locally built images use an explicit immutable commit-derived tag.
-- A deployment to the configurable NAS test target succeeds using NAS-only configuration and disposable roots, without a floating image tag or hardcoded credentials.
-- A failed image transfer/load, backup, migration, startup, health check, or smoke check exits visibly without enabling real-library mounts.
+- A manually selected usable version can be tested on the NAS using NAS-only configuration and disposable roots without hardcoded credentials.
+- A failed configuration, migration, startup, health check, or smoke check is visible without enabling real-library mounts.
 
 ### Phase 2: Library Index
 

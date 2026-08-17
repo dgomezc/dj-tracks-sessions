@@ -46,6 +46,45 @@ public sealed class HealthChecksTests
         Assert.Equal("Unhealthy", document.RootElement.GetProperty("checks").GetProperty("database").GetProperty("status").GetString());
     }
 
+    [Fact]
+    public async Task Database_connection_diagnostic_returns_connected_state_when_probe_is_healthy()
+    {
+        var response = await _client.GetAsync("/configuration/database-connection");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var json = await response.Content.ReadAsStringAsync();
+        using var document = JsonDocument.Parse(json);
+
+        Assert.Equal("connected", document.RootElement.GetProperty("state").GetString());
+        Assert.DoesNotContain("Healthy for test.", json);
+    }
+
+    [Fact]
+    public async Task Database_connection_diagnostic_returns_unavailable_state_when_probe_is_unhealthy()
+    {
+        var response = await new UnhealthyApiFactory().CreateClient().GetAsync("/configuration/database-connection");
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+
+        var json = await response.Content.ReadAsStringAsync();
+        using var document = JsonDocument.Parse(json);
+
+        Assert.Equal("unavailable", document.RootElement.GetProperty("state").GetString());
+        Assert.DoesNotContain("Unhealthy for test.", json);
+    }
+
+    [Fact]
+    public async Task Database_connection_diagnostic_hides_probe_exceptions()
+    {
+        var response = await new ThrowingApiFactory().CreateClient().GetAsync("/configuration/database-connection");
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+
+        var json = await response.Content.ReadAsStringAsync();
+        Assert.DoesNotContain("test exception", json);
+    }
+
     private sealed class HealthyDatabaseHealthProbe : IDatabaseHealthProbe
     {
         public Task<HealthCheckResult> CheckAsync(CancellationToken cancellationToken)
@@ -82,6 +121,26 @@ public sealed class HealthChecksTests
             {
                 services.RemoveAll<IDatabaseHealthProbe>();
                 services.AddScoped<IDatabaseHealthProbe, UnhealthyDatabaseHealthProbe>();
+            });
+        }
+    }
+
+    private sealed class ThrowingDatabaseHealthProbe : IDatabaseHealthProbe
+    {
+        public Task<HealthCheckResult> CheckAsync(CancellationToken cancellationToken)
+        {
+            throw new InvalidOperationException("test exception");
+        }
+    }
+
+    private sealed class ThrowingApiFactory : WebApplicationFactory<Program>
+    {
+        protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.RemoveAll<IDatabaseHealthProbe>();
+                services.AddScoped<IDatabaseHealthProbe, ThrowingDatabaseHealthProbe>();
             });
         }
     }

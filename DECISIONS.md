@@ -11,12 +11,12 @@ This file records settled decisions. Change them only with explicit product appr
 - Approximately 800 tracks with slow monthly growth; PostgreSQL and one worker are sufficient.
 - Git and the canonical GitHub repository, <https://github.com/dgomezc/dj-tracks-and-sessions>, are the development source of truth.
 - Development and debugging run on a Windows 11 PC through WSL. The working tree normally lives in the WSL Linux filesystem rather than `/mnt/c` for Linux/Docker behavior and performance.
-- The local feature-branch loop runs builds, tests, and Docker Compose against disposable fixture roots and PostgreSQL; it never mounts the production music library.
-- Repeatable local WSL build, test, and Docker Compose verification is the delivery gate. After it passes, immutable `linux/amd64` images are built locally from the exact Git commit with an explicit commit-derived tag; a floating `latest` tag is never used.
-- The current LAN NAS test target is `192.168.68.100`, but host, SSH user, deployment path, and image tag remain configurable and credentials are never committed.
-- NAS test deployment uses a versioned Compose definition, NAS-only secrets/configuration, and disposable or representative test roots before any real-library mount.
-- One documented parameterized WSL operation transfers the exact tagged images directly to the NAS over SSH, loads them without requiring a registry, backs up PostgreSQL, runs explicit migrations, starts the versioned Compose test stack, and performs health/smoke checks with visible failure.
-- Rollback selects the previous immutable image tag. The database is restored from the pre-migration backup only when migration compatibility requires it; schema downgrade is never implicit.
+- Local API development in the `Development` environment reads `ConnectionStrings:Postgres` from .NET User Secrets. Docker Compose verification uses an externally supplied non-versioned `ConnectionStrings__Postgres` value because User Secrets are not available inside containers; both flows never mount the production music library.
+- Repeatable local WSL build and test commands, plus the optional exact-commit `linux/amd64` image-build check, are the delivery gate. Optional local Compose verification uses disposable roots only; it is not NAS deployment, and locally built images are never transferred.
+- Docker Compose is tested on the NAS only when a usable development/test version has been manually cloned and selected on the NAS. No SSH connection, WSL-to-NAS transfer, image archive, registry, or automated deployment script is used.
+- The manual NAS workflow uses NAS-only secrets/configuration, disposable or representative test roots before any real-library mount, explicit migration, startup, and health/smoke checks.
+- The NAS PostgreSQL instance is the development database. The project does not deploy, start, mount, or own PostgreSQL containers or volumes. Docker/NAS connection strings stay in ignored external environment or secret files; a future production database is separate and must be provisioned before production deployment.
+- Rollback selects the previous immutable image tag. Database migration rollback is an operational action owned by the database operator; schema downgrade is never implicit and restoration must use an operator-created pre-migration backup only when migration compatibility requires it.
 - Feature branches and commits are pushed to GitHub manually. GitHub Actions automation and GHCR publication may be evaluated later but are not part of the current plan.
 
 ## Technology

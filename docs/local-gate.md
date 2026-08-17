@@ -5,6 +5,7 @@ Run development verification from WSL with the working tree on the Linux filesys
 ## Commands
 
 ```bash
+dotnet user-secrets set "ConnectionStrings:Postgres" "<connection-string>" --project src/DjTracksSessions.Api
 ./scripts/wsl/build.sh
 ./scripts/wsl/test.sh
 ./scripts/wsl/compose-verify.sh
@@ -15,10 +16,10 @@ Run development verification from WSL with the working tree on the Linux filesys
 
 - `build.sh` restores and builds the solution in Release mode.
 - `test.sh` runs the unit and integration tests in Release mode.
-- `compose-verify.sh` starts the Compose stack against disposable local roots and an ephemeral PostgreSQL volume, then checks the API health endpoint and the Web root page.
-- `build-images.sh` builds the API, Web, and migration images for `linux/amd64` from the exact current Git commit and tags them with that full commit SHA.
+- `compose-verify.sh` is an optional local container check against disposable roots and an externally supplied non-versioned `ConnectionStrings__Postgres` value. It is not the NAS deployment workflow.
+- `build-images.sh` optionally builds local `linux/amd64` API, Web, and migration images from the exact current Git commit. These images are not transferred to the NAS.
 
-The NAS deployment workflow is separate and documented in [deployment/nas-test.md](deployment/nas-test.md).
+The NAS Compose workflow is separate, manual, and documented in [deployment/nas-manual.md](deployment/nas-manual.md). It runs only on the NAS from a manually selected checkout when a usable version exists.
 
 ## Required Tools
 
@@ -28,5 +29,7 @@ The NAS deployment workflow is separate and documented in [deployment/nas-test.m
 
 ## Notes
 
+- The first command provisions `ConnectionStrings:Postgres` only for a locally run API in the `Development` environment. It does not configure Compose.
 - The Compose verification script uses temporary fixture roots and does not touch the production music library.
-- The image build script refuses a dirty worktree so the commit tag always matches a clean source state.
+- Compose verification does not create a local PostgreSQL container and cannot read .NET User Secrets. Use an isolated development/test `ConnectionStrings__Postgres` value supplied outside Git through the environment or ignored `.env.local` file.
+- No WSL command transfers code, images, or archives to the NAS.

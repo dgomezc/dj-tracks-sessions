@@ -39,7 +39,7 @@ Docker Compose debe configurar estas rutas del host como montajes de lectura/esc
 | `REMEMBER_LIBRARY_PATH` | `/music/remember` | Analizar/editar sin mover; forzar `PersonalGenre=Remember` |
 | `SESSIONS_LIBRARY_PATH` | `/music/sessions` | Solo metadatos manuales; reproductor y tracklists TXT separados |
 | Datos de la aplicación | `/app/data` | Caché de waveform y datos de ejecución no pertenecientes a la base de datos |
-| Datos de PostgreSQL | Volumen Docker gestionado | Catálogo, historial, estado de jobs, playlists, notificaciones y configuración |
+| Conexión PostgreSQL | Secreto/configuración externa local del NAS | Catálogo, historial, estado de jobs, playlists, notificaciones y configuración |
 
 Configura también:
 
@@ -49,14 +49,15 @@ Configura también:
 - Perfiles de traducción de rutas NAS a Windows/UNC para las exportaciones de playlists.
 - Intervalo de escaneo/reconciliación.
 - Concurrencia del análisis, con valor predeterminado uno.
-- Nombre de la base de datos PostgreSQL, usuario de la aplicación, secreto de contraseña y volumen persistente.
+- Cadena de conexión PostgreSQL desde una fuente de secretos/configuración local del NAS para contenedores o .NET User Secrets para el desarrollo local de la API.
 
 Los secretos deben proceder de variables de entorno o Docker secrets y nunca deben confirmarse en el repositorio.
 
 Requisitos de PostgreSQL:
 
-- Ejecutar PostgreSQL como un servicio dedicado de Docker Compose con health check y volumen de datos con nombre.
-- Configurar la API con un connection string de Npgsql suministrado mediante entorno/secrets.
+- La instancia PostgreSQL del NAS es la base de desarrollo. Compose no debe desplegar, iniciar, montar ni gestionar contenedores o volúmenes PostgreSQL.
+- El desarrollo local de la API en el entorno `Development` lee `ConnectionStrings:Postgres` desde .NET User Secrets. Configura los contenedores con la cadena externa de Npgsql como `ConnectionStrings__Postgres` mediante un archivo de entorno ignorado o una fuente de secretos; User Secrets no está disponible dentro de contenedores.
+- Aprovisionar una base de producción separada únicamente para el futuro despliegue de producción.
 - Usar migraciones de Entity Framework Core como único mecanismo de evolución del esquema.
 - Aplicar migraciones mediante un paso explícito de despliegue/inicio que falle visiblemente; nunca crear ni recrear silenciosamente la base de datos.
 - Usar restricciones y transacciones de PostgreSQL para invariantes que crucen registros persistidos.
@@ -384,14 +385,14 @@ Requisitos:
 Git y el repositorio canónico de GitHub, <https://github.com/dgomezc/dj-tracks-and-sessions>, son la fuente de verdad. La ruta normal de entrega es:
 
 1. Clona y conserva el árbol de trabajo en el sistema de archivos Linux de WSL del PC de desarrollo Windows 11, no bajo `/mnt/c`, salvo que una restricción documentada de una herramienta exija lo contrario. Esto conserva la semántica del sistema de archivos Linux/Docker y evita penalizaciones de rendimiento entre sistemas.
-2. Desarrolla en una rama de funcionalidades en WSL. Ejecuta compilaciones locales repetibles, pruebas y verificación de Docker Compose contra raíces fixture desechables y contenedores PostgreSQL desechables. Esta verificación local es la puerta de entrega. Nunca montes la biblioteca musical de producción en el ciclo local.
-3. Después de pasar las pruebas, construye localmente imágenes de aplicación inmutables `linux/amd64` desde el commit Git exacto y etiquétalas con una etiqueta explícita derivada del commit. Envía manualmente la rama y los commits a GitHub. No uses una etiqueta flotante `latest`.
-4. Transfiere las imágenes con etiqueta exacta directamente desde WSL al NAS por SSH, por ejemplo transmitiendo un archivo de imagen Docker al cargador de imágenes del NAS o mediante un script parametrizado equivalente. La operación debe conservar la etiqueta seleccionada sin requerir un registry. El host NAS, el usuario SSH, la ruta de despliegue y la etiqueta son parámetros; `192.168.68.100` es el objetivo LAN de prueba predeterminado actual, no un valor de aplicación codificado.
-5. Despliega un stack Compose de prueba versionado que haga referencia a la etiqueta derivada del commit transferida, use secretos y configuración exclusivos del NAS, monte inicialmente solo raíces de prueba desechables o representativas, haga una copia de seguridad de PostgreSQL, ejecute un paso de migración explícito que falle visiblemente, inicie los servicios y realice comprobaciones de salud y smoke.
+2. Desarrolla en una rama de funcionalidades en WSL. Ejecuta la API local en `Development` con su cadena de conexión en .NET User Secrets. Ejecuta compilaciones locales repetibles, pruebas y verificación de Docker Compose contra raíces fixture desechables y un valor externo no versionado de `ConnectionStrings__Postgres` porque los contenedores no pueden acceder a User Secrets. Esta verificación local es la puerta de entrega. Nunca montes la biblioteca musical de producción en el ciclo local.
+3. Después de pasar la puerta local de compilación y pruebas, construye opcionalmente imágenes de aplicación inmutables `linux/amd64` desde el commit Git exacto con una etiqueta explícita derivada del commit como comprobación de arquitectura/imágenes. No transfieras esas imágenes al NAS ni uses una etiqueta flotante `latest`. Envía manualmente la rama y los commits a GitHub.
+4. Cuando exista una versión utilizable de desarrollo/pruebas, clona o actualiza manualmente el repositorio en el NAS, selecciona allí la rama, etiqueta o commit, prepara un archivo de entorno/secretos local ignorado y raíces desechables, y valida la configuración de Compose. No se usa conexión SSH al NAS, transferencia WSL-NAS, archivo de imagen, registry ni script de despliegue.
+5. Desde el checkout seleccionado en el NAS, construye y ejecuta manualmente el destino de migraciones contra la instancia externa PostgreSQL de desarrollo, ejecuta `docker compose up -d` y realiza comprobaciones de salud y smoke.
 
-La operación de despliegue debe devolver un fallo si fallan la transferencia/carga de imágenes, la copia de seguridad, la migración, el inicio, la salud o la verificación smoke. Las credenciales y secretos no deben aparecer en el control de código fuente, las etiquetas de imagen, los argumentos de comandos registrados por el repositorio ni los logs de despliegue.
+El operador debe detenerse si falla la configuración, la migración, el inicio, la salud o la verificación smoke. Las credenciales y secretos no deben aparecer en el control de código fuente, los argumentos documentados ni los logs de despliegue.
 
-El rollback selecciona la etiqueta de imagen inmutable anterior. Restaura la copia de seguridad de la base de datos previa a la migración únicamente cuando la versión anterior de la aplicación sea incompatible con el esquema migrado; nunca intentes una degradación implícita del esquema. La documentación de despliegue debe indicar el límite de compatibilidad de migraciones y hacer visibles los fallos de copia de seguridad, migración y rollback.
+El rollback selecciona la etiqueta de imagen inmutable anterior. Restaura una copia de seguridad creada por el administrador de la base únicamente cuando la versión anterior de la aplicación sea incompatible con el esquema migrado; nunca intentes una degradación implícita del esquema. La documentación de despliegue debe indicar el límite de compatibilidad de migraciones y hacer visibles los fallos de migración y rollback.
 
 La automatización de GitHub Actions y la publicación de imágenes en GHCR podrán evaluarse más adelante. Ninguna forma parte del plan ni de la puerta de entrega actuales.
 
@@ -426,21 +427,21 @@ Unidades de trabajo:
 2. Problem Details de la API y mapeo de FluentResults.
 3. Registro de FluentValidation y pipeline explícito de validación asíncrona.
 4. Esquema PostgreSQL Code First, migraciones EF Core revisadas mediante Npgsql y health checks.
-5. Dockerfiles y Docker Compose con cuatro montajes musicales, PostgreSQL y volúmenes persistentes.
+5. Dockerfiles y Docker Compose con cuatro montajes musicales, conexión PostgreSQL externa y volumen persistente de datos de aplicación.
 6. Shell Blazor Blueprint, UI en español, temas claro/oscuro y áreas principales de navegación separadas.
 7. Primitivas durables de jobs y notificaciones.
 8. Comandos o scripts locales repetibles de WSL para compilación, pruebas, verificación de Compose y construcción de imágenes inmutables `linux/amd64` desde un commit Git exacto.
-9. Configuración Compose versionada de prueba del NAS y una operación WSL-NAS parametrizada que cubra transferencia/carga directa de imágenes con etiqueta exacta, copia previa a la migración, migración explícita, inicio, health checks y smoke checks.
+9. Documentación del despliegue manual de prueba en el NAS que cubra selección de versión en un clone del NAS, configuración local, raíces desechables, validación de Compose, migración externa explícita, inicio, health checks, smoke checks, rollback y limpieza.
 
 Criterios de salida:
 
 - Compose inicia API y Web en `linux/amd64`.
 - Los health checks verifican la base de datos, los montajes configurados y las herramientas necesarias.
 - El frontend se comunica únicamente mediante contratos de API.
-- Las pruebas de integración se ejecutan contra contenedores PostgreSQL y raíces del sistema de archivos desechables.
+- Las pruebas de integración de persistencia se ejecutan contra contenedores PostgreSQL desechables y las verificaciones Compose usan una conexión externa no versionada con raíces del sistema de archivos desechables.
 - La verificación local falla antes de construir imágenes o desplegar cuando fallan compilaciones, pruebas o comprobaciones Compose requeridas; las imágenes locales usan una etiqueta inmutable explícita derivada del commit.
-- Un despliegue al objetivo configurable de prueba del NAS funciona usando configuración exclusiva del NAS y raíces desechables, sin etiqueta flotante ni credenciales codificadas.
-- Una transferencia/carga de imágenes, copia de seguridad, migración, inicio, health check o smoke check fallidos terminan visiblemente sin habilitar montajes de bibliotecas reales.
+- Una versión utilizable seleccionada manualmente puede probarse en el NAS usando configuración exclusiva del NAS y raíces desechables, sin credenciales codificadas.
+- Un fallo de configuración, migración, inicio, health check o smoke check es visible sin habilitar montajes de bibliotecas reales.
 
 ### Fase 2: Índice de la biblioteca
 

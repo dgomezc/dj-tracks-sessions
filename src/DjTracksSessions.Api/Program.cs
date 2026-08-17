@@ -1,5 +1,6 @@
 using DjTracksSessions.Api;
 using DjTracksSessions.Api.Validation;
+using DjTracksSessions.Api.Features.Configuration.DatabaseConnection;
 using DjTracksSessions.Contracts;
 using DjTrackSessions.Infrastructure;
 using FluentResults;
@@ -37,6 +38,8 @@ app.MapHealthChecks("/health", new HealthCheckOptions
         await context.Response.WriteAsync(JsonSerializer.Serialize(payload));
     }
 });
+
+app.MapDatabaseConnectionDiagnostic();
 
 app.MapGet("/examples/{id}", (int id) =>
 {

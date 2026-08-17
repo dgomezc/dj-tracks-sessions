@@ -12,7 +12,7 @@ public sealed class DurableJobPrimitivesTests
     public void Application_db_context_exposes_durable_job_and_notification_tables()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseNpgsql("Host=localhost;Database=dj_tracks_sessions_test;Username=postgres;Password=postgres")
+            .UseNpgsql("Host=placeholder;Database=placeholder;Username=placeholder;Password=placeholder")
             .Options;
 
         using var context = new ApplicationDbContext(options);
