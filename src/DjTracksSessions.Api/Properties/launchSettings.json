@@ -1,0 +1,22 @@
+{
+  "profiles": {
+    "DjTracksSessions.Api": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:6077;http://localhost:6078"
+    },
+    "WSL": {
+      "commandName": "WSL2",
+      "launchBrowser": true,
+      "launchUrl": "https://localhost:6077",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "https://localhost:6077;http://localhost:6078"
+      },
+      "distributionName": "Ubuntu"
+    }
+  }
+}
