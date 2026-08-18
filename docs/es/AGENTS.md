@@ -76,6 +76,7 @@ Estas reglas son obligatorias para todas las personas y agentes de IA que contri
 ## Reglas de UI
 
 - El texto visible para el usuario está en español. El código, los identificadores, los comentarios, los contratos de API y la documentación técnica permanecen en inglés.
+- Los archivos Razor bajo `src/DjTracksSessions.Web` contienen únicamente markup y directivas; mantén todo el código C# en el archivo de code-behind `.razor.cs` adyacente, dentro de su clase parcial.
 - Optimiza para un navegador de escritorio. El diseño específico para móviles está fuera de alcance.
 - Conserva un límite claro entre `Explorer / Player` y `Analyzer / Tagger`.
 - Usa componentes Blazor Blueprint y sus temas claro/oscuro antes de crear primitivas personalizadas.

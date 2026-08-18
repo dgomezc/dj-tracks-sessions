@@ -74,6 +74,7 @@ These rules are mandatory for every human or AI contributor.
 ## UI Rules
 
 - User-facing text is Spanish. Code, identifiers, comments, API contracts, and technical documentation remain English.
+- Razor files under `src/DjTracksSessions.Web` contain markup and directives only; keep all C# code in the adjacent `.razor.cs` partial class code-behind file.
 - Optimize for a desktop browser. Mobile-specific design is out of scope.
 - Preserve a clear boundary between `Explorer / Player` and `Analyzer / Tagger`.
 - Use Blazor Blueprint components and its light/dark theming before building custom primitives.
