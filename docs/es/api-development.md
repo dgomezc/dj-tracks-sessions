@@ -19,6 +19,25 @@ La API expone su documento OpenAPI generado y una referencia interactiva de Scal
 
 3. Abre [Scalar](http://localhost:5000/scalar) en un navegador. Usa la URL y el puerto que muestre `dotnet run` si son diferentes.
 
+## Depurar ambos proyectos desde Visual Studio con WSL
+
+Usa este flujo cuando quieras iniciar `DjTracksSessions.Api` y `DjTracksSessions.Web` juntos bajo el depurador de Visual Studio:
+
+1. Abre `DjTracksSessions.slnx` en Visual Studio Community 2026. Abre el archivo de solución, no la carpeta del repositorio ni un proyecto individual.
+2. En el Explorador de soluciones, haz clic derecho en la raíz de la solución y selecciona **Configure Startup Projects...**.
+3. Selecciona **Multiple startup projects**.
+4. Establece `DjTracksSessions.Api` y `DjTracksSessions.Web` en **Start**. Para cada proyecto, selecciona su destino de depuración `WSL` cuando esté disponible.
+5. Guarda la configuración y selecciona el perfil de inicio multi-proyecto resultante en el selector de ejecución/depuración de Visual Studio.
+6. Pulsa **F5**. Visual Studio debería iniciar ambos procesos y abrir las URL de API y Web definidas por sus perfiles WSL.
+
+Los perfiles actuales del repositorio definen `WSL` para ambos proyectos y usan la distribución `Ubuntu`. La API usa el puerto HTTPS `2019` (HTTP `2020`); el proyecto Web usa el puerto HTTPS `2021` (HTTP `2022`). Usa las URL que muestre Visual Studio si la configuración local es diferente.
+
+Visual Studio guarda una configuración de inicio de solución creada por el usuario en `DjTracksSessions.slnLaunch.user`. Es específica del usuario y normalmente no es un artefacto de configuración independiente de la máquina, por lo que debes configurar el perfil de nuevo en otro equipo. Un archivo compartido `DjTracksSessions.slnLaunch` solo debe versionarse cuando se quiera compartir intencionadamente esa configuración exacta; no sustituye la comprobación de que cada equipo tenga la distribución WSL, el SDK y los prerrequisitos de los proyectos.
+
+Este flujo es depuración directa con WSL, no depuración mediante Docker Compose. El perfil WSL ejecuta los proyectos API y Web de la solución bajo el depurador. Docker Compose compila y ejecuta los servicios en contenedores con su propia configuración, puertos, montajes y un valor externo de `ConnectionStrings__Postgres`; usa el flujo de Compose para verificar contenedores o el comportamiento en el NAS.
+
+Antes de pulsar F5, verifica que Visual Studio Community 2026 tiene las herramientas de desarrollo .NET/web, que WSL 2 está instalado y dispone de la distribución `Ubuntu`, que el SDK de .NET 10 está disponible en WSL y que el repositorio es accesible desde el sistema de archivos Linux de WSL. Si los proyectos fallan al iniciar, comprueba primero los destinos de depuración seleccionados, la distribución WSL, la configuración local de User Secrets/base de datos necesaria para los endpoints que dependan de ella y las URL HTTPS que muestre Visual Studio. No uses los montajes de la biblioteca musical de producción en este flujo de depuración local.
+
 ## Endpoints
 
 | URL | Propósito |

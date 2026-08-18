@@ -63,3 +63,5 @@ For the repeatable WSL gate commands, see [docs/local-gate.md](docs/local-gate.m
 For the manual NAS test deployment flow, see [docs/deployment/nas-manual.md](docs/deployment/nas-manual.md).
 
 For local API development and Scalar testing, see [docs/api-development.md](docs/api-development.md).
+
+For Visual Studio Community 2026 F5 debugging of the API and Web together through WSL, see the [WSL debugging section](docs/api-development.md#debug-both-projects-from-visual-studio-with-wsl). Spanish documentation is available in [docs/es/api-development.md](docs/es/api-development.md#depurar-ambos-proyectos-desde-visual-studio-con-wsl).
