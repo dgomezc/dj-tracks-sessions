@@ -51,7 +51,7 @@ Estas reglas son obligatorias para todas las personas y agentes de IA que contri
 ## Seguridad del sistema de archivos
 
 - Trata las raíces montadas configuradas como límites de seguridad. Rechaza las rutas que escapen de su raíz después de la canonicalización.
-- Identifica los archivos de audio mediante el ID persistente de la base de datos más el hash o fingerprint del contenido, nunca solo mediante la ruta.
+- Identifica los archivos de Track Management mediante una raíz permitida y una ruta relativa canonicalizada. No requieras un ID persistido para explorar, mostrar detalle, editar metadatos ni mover Pending.
 - Escribe las etiquetas atómicamente a través de un archivo temporal en el mismo sistema de archivos y reemplázalo solo después de verificarlo.
 - Conserva las etiquetas no compatibles y desconocidas salvo que una regla específica del formato indique explícitamente eliminarlas.
 - Conserva exactamente una imagen de carátula incrustada después de una operación de carátula aprobada.

@@ -1,6 +1,6 @@
 # Phase 2 Work Unit 4: Stable Hash Identity
 
-The scan/extraction coordinator calculates a stable content identity for every discovered audio file using SHA-256 over the exact source bytes. The digest is uppercase hexadecimal and is independent of the file path, extension, tags, or metadata extraction result. It is suitable for correlating unchanged content after later path moves or renames; reconciliation and persistence are outside this work unit.
+The historical scan/extraction coordinator calculates a stable content identity for every discovered audio file using SHA-256 over the exact source bytes. The digest remains reusable for future analysis or duplicate workflows, but Track Management does not calculate or persist it for browsing. Browsing lists files and reads tags directly from configured filesystem roots.
 
 Hashing is incremental: the adapter opens the root-confined file for read-only access and feeds 64 KiB chunks to `SHA256` with `FileOptions.SequentialScan`. It never loads the complete file into memory for identity calculation. Metadata extraction remains the existing bounded adapter and its technical/tag outcome is retained even if hashing fails.
 

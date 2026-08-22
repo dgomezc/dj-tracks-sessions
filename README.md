@@ -2,13 +2,13 @@
 
 Web application for cataloging, tagging, organizing, and playing a personal electronic music collection stored on a NAS.
 
-The application is designed for a single user, runs exclusively in Docker, and is accessed from a desktop browser on the local network.
+The application is designed for a single user, runs exclusively in Docker, and is accessed from a desktop browser on the local network. Track Management browses the configured Main, Pending, and Remember files directly; the file's tags are authoritative for what is displayed. PostgreSQL is not used for Track Management browsing, metadata editing, or Pending movement. Sessions remains a separate collection.
 
 Canonical repository: <https://github.com/dgomezc/dj-tracks-and-sessions>
 
 ## Status
 
-Foundation implementation is in progress. Phase 2A Work Unit 1, explicit read-only scan persistence, is complete in `b1f4df6`. The next work unit is the Spanish desktop Track Management screen; it is the first of the screen-first sequence in [PLAN.md](PLAN.md#screen-first-delivery-sequence).
+Foundation implementation is in progress. Track Management is filesystem-first: there is no persisted track index, scan endpoint, or persisted track ID. The file and its embedded tags are authoritative for browsing, detail, metadata editing, and Pending movement. PostgreSQL remains only for persistence with a real consumer, including settings, jobs, notifications, and Sessions where supported.
 
 Read these documents before changing the project:
 
@@ -51,6 +51,8 @@ Docker Compose will mount four independently configured roots:
 | Pending | Inbox for tracks awaiting analysis and approval |
 | Remember | Older tracks that remain in place and always use `PersonalGenre=Remember` |
 | Sessions | Personal DJ sessions and their TXT tracklists |
+
+Track Management resolves and lists audio files from these configured filesystem roots using relative paths confined to each root. It reads current technical properties and tags from each file; PostgreSQL is not the source required for browsing or tag display. Sessions is browsed through its own separate flow and is never included in Track Management.
 
 ## Execution Rule
 

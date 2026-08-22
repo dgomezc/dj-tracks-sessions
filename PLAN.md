@@ -1,6 +1,8 @@
 # DJ Tracks & Sessions Implementation Plan
 
-This document is the executable source of truth for product scope, architecture, delivery order, and acceptance criteria. `b1f4df6` completed Phase 2A Work Unit 1, explicit read-only scan persistence. The immediate stage is the Track Management screen; delivery then proceeds strictly by complete screens: Track Management, Player, Sessions, then remaining screens.
+This document is the executable source of truth for product scope, architecture, delivery order, and acceptance criteria. Track Management is filesystem-first and has no persisted track index. Delivery proceeds strictly by complete screens: Track Management, Player, Sessions, then remaining screens.
+
+Track Management is filesystem-first: it directly enumerates the configured Main, Pending, and Remember roots through confined relative paths and reads current technical properties and tags from the files. File tags are the source of truth for displayed tags. There is no persisted index, scan endpoint, or persisted track ID, and PostgreSQL is not used for listing, detail, editing, or Pending movement. Sessions remains a separate collection and flow.
 
 An implementation agent must complete phases in order. Within a phase, deliver one vertical work unit at a time with its tests. A screen is not complete until its API behavior, UI states, safety flow, and acceptance evidence are present; do not start the next screen until the current screen exit criteria pass.
 
@@ -37,7 +39,7 @@ Docker Compose must configure these host paths as read/write mounts:
 | `REMEMBER_LIBRARY_PATH` | `/music/remember` | Analyze/edit without moving; force `PersonalGenre=Remember` |
 | `SESSIONS_LIBRARY_PATH` | `/music/sessions` | Manual metadata only; separate player and TXT tracklists |
 | Application data | `/app/data` | Waveform cache and non-database runtime data |
-| PostgreSQL connection | External NAS-local secret/configuration | Catalog, history, job state, playlists, notifications, and configuration |
+| PostgreSQL connection | External NAS-local secret/configuration | Sessions, settings, jobs, notifications, and explicitly planned future state; not required for Track Management |
 
 Also configure:
 
@@ -443,7 +445,7 @@ Exit criteria:
 
 ### Phase 2: Library Index (Foundation Complete Through Work Unit 4)
 
-Goal: establish a trustworthy, read-only catalog.
+Goal: establish reusable filesystem discovery and extraction capabilities; Track Management does not persist a track catalog.
 
 Completed work units:
 
@@ -455,7 +457,7 @@ Completed work units:
 Deferred original work units:
 
 5. Reconcile renamed, moved, changed, and missing files. Superseded for immediate delivery by the simpler reconciliation in Phase 2A Work Unit 1.
-6. Watch roots and schedule full reconciliation. Deferred; Phase 2A uses explicit manual scans.
+6. Watch roots and schedule full reconciliation. Deferred; Phase 2A browsing is direct filesystem access, while any persisted scan is optional state rather than a browsing prerequisite.
 7. Build folder tree, catalog grid, search, and required filters. Superseded for immediate delivery by Phase 2A Work Unit 2's smaller read-only catalog.
 
 Original Phase 2 exit criteria, now deferred or fulfilled through Phase 2A and later roadmap work:
@@ -472,19 +474,19 @@ Phase 2 is not the immediate implementation queue. Continue with Phase 2A below;
 
 Goal: deliver a useful catalog and the smallest safe organization workflow before automation, provider analysis, playback, and specialist features.
 
-This stage is synchronous and manually triggered. It persists only the minimal catalog model, keeps Sessions separate, and preserves all existing filesystem safety boundaries.
+This stage uses direct filesystem reads and explicitly confirmed operations. Track Management has no persisted scan state, keeps Sessions separate, and preserves all existing filesystem safety boundaries.
 
 Work units:
 
-1. **Persist an explicit read-only scan (complete in `b1f4df6`).** Scan the four configured roots through the existing confined scanner, extraction, and incremental hashing components; synchronously upsert minimal catalog records, report per-file failures, reconcile unambiguous same-root hash matches, and mark missing records without deleting anything.
-2. **Deliver the read-only Track Management screen (next).** Add ordinary catalog query endpoints and one Spanish desktop screen for manual scan, root-separated Main/Pending/Remember browsing, basic text search, simple filters, track detail, and loading/empty/failure states. Sessions is excluded. No playback, provider actions, bulk actions, metadata writes, or automatic refresh.
+1. **Persist an explicit read-only scan (retired).** The historical scan migration remains in migration history for upgradeability; its runtime endpoint, entities, persistence, and tests are removed. The follow-up migration drops only its two catalog tables.
+2. **Deliver the read-only Track Management screen (next).** Add filesystem-backed API endpoints and one Spanish desktop screen for root-separated Main/Pending/Remember browsing, current file-tag/technical detail, basic text search, simple filters, and loading/empty/failure states. Sessions is excluded. No playback, provider actions, bulk actions, or automatic refresh.
 3. **Close Track Management with safe one-MP3 editing.** Add the same screen's exact before/after preview and explicit submit for supported MP3 text fields, including `TXXX:PERSONAL_GENRE`; use confined paths, sibling temporary writes, reopen verification, atomic replacement, and clear unsupported-format failures.
 4. **Close Track Management with one approved Pending-to-Main move.** Add the same screen's separate confirmation of exact source, destination, final filename, and collision result after an approved edit; block collisions and update the catalog only after a verified move.
 
 Exit criteria:
 
 - An explicit scan persists a disposable four-root fixture without source-byte changes, remains idempotent, and reports failures independently.
-- The Track Management screen browses Main, Pending, and Remember through ordinary catalog API contracts; Sessions never enters its route, queries, filters, detail, or future queue affordances.
+- The Track Management screen browses Main, Pending, and Remember directly from their configured filesystem roots through API contracts; current file tags are displayed as authoritative. PostgreSQL persistence is not required for listing or tag display, and Sessions never enters its route, queries, filters, detail, or future queue affordances.
 - A single MP3 text edit preserves unknown tags and leaves the source unchanged on any validation, verification, confinement, or replacement failure.
 - A Pending MP3 move requires separate exact confirmation, blocks collisions without suffixes, and never moves Main or Remember files.
 

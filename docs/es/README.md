@@ -4,13 +4,13 @@
 
 Aplicación web para catalogar, etiquetar, organizar y reproducir una colección personal de música electrónica almacenada en un NAS.
 
-La aplicación está diseñada para un solo usuario, se ejecuta exclusivamente en Docker y se accede desde un navegador de escritorio en la red local.
+La aplicación está diseñada para un solo usuario, se ejecuta exclusivamente en Docker y se accede desde un navegador de escritorio en la red local. Track Management explora directamente los archivos configurados de Main, Pending y Remember; las etiquetas del archivo son la fuente de verdad de lo que se muestra. PostgreSQL no se usa para explorar, editar metadatos ni mover archivos Pending. Sessions permanece como colección separada.
 
 Repositorio canónico: <https://github.com/dgomezc/dj-tracks-and-sessions>
 
 ## Estado
 
-La implementación de la base está en curso. La unidad 1 de la Fase 2A, persistencia del escaneo explícito de solo lectura, está completada en `b1f4df6`. La siguiente unidad es la pantalla de gestión de pistas en español; es la primera de la [secuencia de entrega por pantallas](PLAN.md#secuencia-de-entrega-por-pantallas).
+La implementación de la base está en curso. Track Management prioriza el sistema de archivos y no tiene un índice persistido, endpoint de escaneo ni ID persistido de pistas. El archivo y sus etiquetas incrustadas son la fuente de verdad para explorar, mostrar detalle, editar metadatos y mover Pending. PostgreSQL solo permanece para persistencia con consumidores reales, como configuración, jobs, notificaciones y Sessions cuando esté soportada.
 
 Lee estos documentos antes de modificar el proyecto:
 
@@ -53,6 +53,8 @@ Docker Compose montará cuatro raíces configuradas de forma independiente:
 | Pending | Bandeja de entrada para pistas pendientes de análisis y aprobación |
 | Remember | Pistas antiguas que permanecen en su lugar y siempre usan `PersonalGenre=Remember` |
 | Sessions | Sesiones personales de DJ y sus tracklists TXT |
+
+Track Management resuelve y lista los archivos de audio desde estas raíces configuradas usando rutas relativas confinadas a cada raíz. Lee las propiedades técnicas y etiquetas actuales de cada archivo; PostgreSQL no es la fuente necesaria para explorar ni mostrar etiquetas. Sessions se explora mediante su propio flujo separado y nunca se incluye en Track Management.
 
 ## Regla de ejecución
 

@@ -4,9 +4,13 @@ This file records settled decisions. Change them only with explicit product appr
 
 ## Delivery Sequencing
 
-- Adopt **screen-first delivery** after Phase 2A Work Unit 1. `b1f4df6` completed explicit read-only scan persistence. Finish the Track Management screen, including its scan, browse, edit, and approved Pending-move flows, before starting the Player screen; finish Player before Sessions; start all remaining screens only afterwards.
-- The Phase 2A MVP uses synchronous, manually triggered scans and operations. Filesystem watchers, scheduled reconciliation, durable jobs, restart recovery, notifications, and background automation are deferred until actual scale or usage demonstrates the need.
-- Persist only the minimal catalog model needed for root-scoped records, current technical/tag snapshots, content hashes, scan observations, missing state, and separate Session catalog items. Do not pre-create provider, analysis, artwork-history, playlist, playback, duplicate, or notification workflows for Phase 2A.
+- **Approved Track Management browsing decision:** Track Management navigates the configured Main, Pending, and Remember files directly through confined filesystem access. PostgreSQL is not used for listing tracks, displaying tags, metadata editing, or Pending movement; tags read from each file are authoritative. Sessions remains separate.
+
+- **Catalog persistence removal decision:** Track Management has no persisted track index. `CatalogTrack`, `CatalogTrackMetadata`, catalog scan persistence, and persisted track IDs are removed. Metadata edits and Pending moves accept an allowed root plus relative path, re-read current filesystem tags, and return filesystem state. PostgreSQL remains for persistence that has a real consumer or an explicitly planned future use.
+
+- Adopt **screen-first delivery** after retiring the historical Phase 2A Work Unit 1 scan persistence. Finish the Track Management screen, including its browse, edit, and approved Pending-move flows, before starting the Player screen; finish Player before Sessions; start all remaining screens only afterwards.
+- The Track Management MVP uses direct synchronous filesystem reads and explicit mutation confirmations. Filesystem watchers, scheduled reconciliation, catalog scan jobs, and background automation are deferred until a real consumer is approved.
+- Persist only concepts with a current consumer or explicit approved future use. Track Management has no persisted ordinary-track catalog, metadata snapshot, content hash, scan observation, or persisted track ID; separate Sessions persistence remains independent.
 - The immediate next work unit is Phase 2A Work Unit 2, the read-only portion of the Track Management screen. Provider analysis, playlists, duplicates, bulk operations, undo/history, deletion, and automation remain deferred. Player and Sessions are sequenced after the Track Management screen rather than being prerequisites for it.
 
 ## Deployment
@@ -39,7 +43,7 @@ This file records settled decisions. Change them only with explicit product appr
 ## Files And Collections
 
 - Docker Compose configures the main, pending, Remember, and Sessions roots.
-- The main library is already cataloged and is reanalyzed only on explicit request. Every proposed change requires approval.
+- Main files are read directly from the configured root and are modified only through explicit approved operations.
 - Pending files are detected automatically but analyzed only when requested.
 - Approved pending files may be tagged, renamed, and moved only after movement confirmation.
 - Remember tracks may be analyzed and edited but never moved; `PersonalGenre` is always `Remember`.
@@ -53,7 +57,7 @@ This file records settled decisions. Change them only with explicit product appr
 - Filename uses `Artist 1, Artist 2 - Title (Remixer Remix).ext`.
 - Provider year wins in the Year tag; personal/download year is the fallback.
 - Provider genre wins in the Genre tag; PersonalGenre is the fallback.
-- PersonalGenre is always stored separately in the database and audio file.
+- PersonalGenre is stored in the audio file for the current filesystem-first Track Management flow; database persistence requires a separately approved consumer.
 - Supported personal genres: Day Instrumental, Day Vocal, Night Instrumental, Night Vocal, TechnoHouse, Tribal, and Remember.
 - Tribal and TechnoHouse take precedence over Day/Night and Vocal/Instrumental classification.
 - Musical key is written in Camelot notation.

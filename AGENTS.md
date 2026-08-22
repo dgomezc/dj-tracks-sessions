@@ -38,7 +38,7 @@ These rules are mandatory for every human or AI contributor.
 - Slices use `DjTrackSessions.Domain` for entities and invariants and `DjTrackSessions.Infrastructure` adapters; do not move persistence or external implementations into the API.
 - `DjTrackSessions.Domain` owns framework-independent entities, value objects, and domain invariants; it must not reference EF Core.
 - `DjTrackSessions.Infrastructure` owns the EF Core Code First `DbContext`, Fluent `IEntityTypeConfiguration<T>` mappings, migrations, and filesystem, database, provider, image, and audio-tool adapters.
-- Use Entity Framework Core Code First with the Npgsql provider for all application persistence. PostgreSQL is the only supported production database.
+- Use Entity Framework Core Code First with the Npgsql provider for persisted sessions, settings, jobs, notifications, and future state. Track Management browsing and file metadata do not use PostgreSQL; PostgreSQL is the only supported production database where persistence is needed.
 - Create schema changes through reviewed EF Core migrations. Do not use `EnsureCreated` for application startup or production deployment.
 - Return expected failures through `FluentResults`. Do not use exceptions for validation, missing matches, collisions, or other expected outcomes.
 - Use `FluentValidation` explicitly and asynchronously. Do not rely on ASP.NET synchronous auto-validation.
@@ -49,7 +49,7 @@ These rules are mandatory for every human or AI contributor.
 ## Filesystem Safety
 
 - Treat configured mount roots as security boundaries. Reject paths that escape their root after canonicalization.
-- Identify audio files by persistent database ID plus content hash/fingerprint, never by path alone.
+- Identify Track Management files by an allowed root plus canonicalized relative path. Do not require a persisted track ID for browsing, detail, metadata editing, or Pending moves.
 - Write tags atomically through a temporary file in the same filesystem and replace only after verification.
 - Preserve unsupported and unknown tags unless a format-specific rule explicitly removes them.
 - Keep exactly one embedded artwork image after an approved artwork operation.

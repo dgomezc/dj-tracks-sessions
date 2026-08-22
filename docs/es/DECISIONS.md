@@ -6,6 +6,10 @@ Este archivo registra decisiones establecidas. Cámbialas únicamente con aproba
 
 ## Secuencia de entrega
 
+- **Decisión aprobada sobre la exploración de Track Management:** Track Management navega directamente los archivos configurados de Main, Pending y Remember mediante acceso confinado al sistema de archivos. PostgreSQL no se usa para listar pistas, mostrar etiquetas, editar metadatos ni mover Pending; las etiquetas leídas del archivo son la fuente de verdad. Sessions permanece separada.
+
+- **Decisión de eliminar la persistencia del catálogo:** Track Management no tiene un índice persistido de pistas. Se eliminan `CatalogTrack`, `CatalogTrackMetadata`, la persistencia del escaneo y los IDs persistidos de pistas. Las ediciones y movimientos aceptan una raíz permitida y una ruta relativa, vuelven a leer las etiquetas actuales y devuelven el estado del sistema de archivos.
+
 - Se adopta la **entrega por pantallas** después de la unidad 1 de la Fase 2A. `b1f4df6` completó la persistencia del escaneo explícito de solo lectura. Cierra la pantalla de gestión de pistas, incluidos sus flujos de escaneo, exploración, edición y movimiento Pending aprobado, antes de iniciar la pantalla del reproductor; cierra el reproductor antes de Sessions; inicia el resto de pantallas únicamente después.
 - El MVP de la Fase 2A usa escaneos y operaciones síncronos iniciados manualmente. Los watchers, la reconciliación programada, los jobs durables, la recuperación tras reinicio, las notificaciones y la automatización en segundo plano se aplazan hasta que la escala o el uso real demuestren su necesidad.
 - Persiste únicamente el modelo mínimo necesario para registros confinados a raíces, snapshots técnicos/de etiquetas actuales, hashes de contenido, observaciones de escaneo, estado ausente y elementos de catálogo separados de Sessions. No precrees flujos de proveedores, análisis, historial de carátulas, playlists, reproducción, duplicados o notificaciones para la Fase 2A.
@@ -41,7 +45,7 @@ Este archivo registra decisiones establecidas. Cámbialas únicamente con aproba
 ## Archivos y colecciones
 
 - Docker Compose configura las raíces Main, Pending, Remember y Sessions.
-- La biblioteca Main ya está catalogada y solo se vuelve a analizar mediante una solicitud explícita. Toda modificación propuesta requiere aprobación.
+- Los archivos Main se leen directamente desde la raíz configurada y solo se modifican mediante operaciones aprobadas explícitamente.
 - Los archivos Pending se detectan automáticamente, pero solo se analizan cuando se solicita.
 - Los archivos Pending aprobados solo pueden etiquetarse, renombrarse y moverse después de confirmar el movimiento.
 - Las pistas Remember pueden analizarse y editarse, pero nunca se mueven; `PersonalGenre` siempre es `Remember`.

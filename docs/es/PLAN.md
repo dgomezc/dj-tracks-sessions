@@ -2,7 +2,9 @@
 
 > Traducción al español. El documento original en inglés se conserva en `../../PLAN.md`.
 
-Este documento es la fuente ejecutable de verdad para el alcance del producto, la arquitectura, el orden de entrega y los criterios de aceptación. `b1f4df6` completó la unidad 1 de la Fase 2A, persistencia del escaneo explícito de solo lectura. La etapa inmediata es la pantalla de gestión de pistas; la entrega continúa estrictamente por pantallas completas: gestión de pistas, reproductor, Sessions y después las pantallas restantes.
+Este documento es la fuente ejecutable de verdad para el alcance del producto, la arquitectura, el orden de entrega y los criterios de aceptación. Track Management no tiene un índice persistido de pistas; la entrega continúa estrictamente por pantallas completas: gestión de pistas, reproductor, Sessions y después las pantallas restantes.
+
+La exploración de Track Management usa el sistema de archivos: enumera directamente las raíces configuradas Main, Pending y Remember mediante rutas relativas confinadas y lee de los archivos las propiedades técnicas y etiquetas actuales. Las etiquetas del archivo son la fuente de verdad. PostgreSQL no es necesario para listar, mostrar detalle, editar ni mover pistas. Sessions sigue siendo una colección y un flujo separado.
 
 Un agente de implementación debe completar las fases en orden. Dentro de una fase, entrega una unidad de trabajo vertical cada vez junto con sus pruebas. Una pantalla no está completa hasta que existen su comportamiento API, estados de UI, flujo de seguridad y evidencias de aceptación; no comiences la siguiente pantalla hasta que pasen los criterios de salida de la actual.
 
@@ -39,7 +41,7 @@ Docker Compose debe configurar estas rutas del host como montajes de lectura/esc
 | `REMEMBER_LIBRARY_PATH` | `/music/remember` | Analizar/editar sin mover; forzar `PersonalGenre=Remember` |
 | `SESSIONS_LIBRARY_PATH` | `/music/sessions` | Solo metadatos manuales; reproductor y tracklists TXT separados |
 | Datos de la aplicación | `/app/data` | Caché de waveform y datos de ejecución no pertenecientes a la base de datos |
-| Conexión PostgreSQL | Secreto/configuración externa local del NAS | Catálogo, historial, estado de jobs, playlists, notificaciones y configuración |
+| Conexión PostgreSQL | Secreto/configuración externa local del NAS | Estado de escaneo opcional, historial, estado de jobs, playlists, notificaciones y configuración; no es necesaria para explorar Track Management |
 
 Configura también:
 
@@ -457,7 +459,7 @@ Unidades de trabajo completadas:
 Unidades originales aplazadas:
 
 5. Reconciliar archivos renombrados, movidos, modificados y ausentes. Sustituida para la entrega inmediata por la reconciliación más simple de la unidad 1 de la Fase 2A.
-6. Vigilar las raíces y programar la reconciliación completa. Aplazada; la Fase 2A usa escaneos manuales explícitos.
+6. Vigilar las raíces y programar la reconciliación completa. Aplazada; la exploración de la Fase 2A accede directamente al sistema de archivos y el escaneo persistido es estado opcional, no un requisito de exploración.
 7. Construir árbol de carpetas, cuadrícula de catálogo, búsqueda y filtros requeridos. Sustituida para la entrega inmediata por el catálogo de solo lectura más pequeño de la unidad 2 de la Fase 2A.
 
 Criterios de salida originales de la Fase 2, ahora aplazados o cubiertos mediante la Fase 2A y el trabajo posterior del roadmap:
@@ -474,19 +476,19 @@ La Fase 2 no es la cola de implementación inmediata. Continúa con la Fase 2A s
 
 Objetivo: entregar un catálogo útil y el flujo mínimo seguro de organización antes de la automatización, el análisis de proveedores, la reproducción y las funciones especializadas.
 
-Esta etapa es síncrona y se inicia manualmente. Persiste únicamente el modelo mínimo del catálogo, mantiene Sessions separada y conserva todos los límites de seguridad del sistema de archivos existentes.
+Esta etapa usa operaciones síncronas iniciadas explícitamente cuando corresponde. La exploración de Track Management mantiene el acceso directo al sistema de archivos; el estado de escaneo persistido es opcional para explorar, Sessions permanece separada y se conservan todos los límites de seguridad del sistema de archivos existentes.
 
 Unidades de trabajo:
 
 1. **Persistir un escaneo explícito de solo lectura (completado en `b1f4df6`).** Escanear las cuatro raíces configuradas mediante el scanner confinado, la extracción y el hashing incremental existentes; hacer upsert síncrono del modelo mínimo, informar fallos por archivo, reconciliar coincidencias inequívocas por hash dentro de la misma raíz y marcar ausentes sin borrar nada.
-2. **Entregar la pantalla de gestión de pistas de solo lectura (siguiente).** Añadir endpoints de consulta del catálogo ordinario y una pantalla de escritorio en español para escaneo manual, exploración separada de Main/Pending/Remember, búsqueda de texto básica, filtros simples, detalle de pista y estados de carga/vacío/fallo. Sessions queda excluida. Sin reproducción, acciones de proveedores, acciones masivas, escrituras de metadatos ni actualización automática.
+2. **Entregar la pantalla de gestión de pistas de solo lectura (siguiente).** Añadir endpoints respaldados por el sistema de archivos y una pantalla de escritorio en español para explorar por separado Main/Pending/Remember, mostrar etiquetas/propiedades técnicas actuales, buscar texto básico, aplicar filtros simples y presentar estados de carga/vacío/fallo. Un escaneo manual puede actualizar el estado persistido, pero no es requisito previo para explorar. Sessions queda excluida. Sin reproducción, acciones de proveedores, acciones masivas, escrituras de metadatos ni actualización automática.
 3. **Cerrar la gestión de pistas con edición segura de un MP3.** Añadir en la misma pantalla una vista previa exacta antes/después y envío explícito para campos de texto MP3 compatibles, incluido `TXXX:PERSONAL_GENRE`; usar rutas confinadas, escritura temporal hermana, verificación al reabrir, reemplazo atómico y fallos claros para formatos no compatibles.
 4. **Cerrar la gestión de pistas con un movimiento Pending a Main aprobado.** Añadir en la misma pantalla la confirmación separada de origen exacto, destino, nombre final y resultado de colisión después de una edición aprobada; bloquear colisiones y actualizar el catálogo únicamente tras un movimiento verificado.
 
 Criterios de salida:
 
 - Un escaneo explícito persiste un fixture desechable de cuatro raíces sin cambiar los bytes originales, es idempotente e informa los fallos de forma independiente.
-- La pantalla de gestión de pistas explora Main, Pending y Remember mediante contratos API ordinarios; Sessions nunca entra en su ruta, consultas, filtros, detalle ni futuros controles de cola.
+- La pantalla de gestión de pistas explora Main, Pending y Remember directamente desde sus raíces configuradas mediante contratos API; las etiquetas actuales del archivo se muestran como fuente de verdad. La persistencia PostgreSQL no es necesaria para listar ni mostrar etiquetas, y Sessions nunca entra en su ruta, consultas, filtros, detalle ni futuros controles de cola.
 - Una edición de texto de un MP3 conserva etiquetas desconocidas y deja el origen intacto ante cualquier fallo de validación, verificación, confinamiento o reemplazo.
 - Un movimiento de MP3 Pending requiere confirmación exacta separada, bloquea colisiones sin sufijos y nunca mueve archivos de Main o Remember.
 
