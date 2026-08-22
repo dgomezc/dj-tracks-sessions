@@ -15,4 +15,5 @@ public sealed record CurrentAudioTags(
     string? Composer,
     string? Isrc,
     string? InitialKey,
-    string? BeatsPerMinute);
+    string? BeatsPerMinute,
+    string? PersonalGenre = null);

@@ -7,7 +7,7 @@ public static class LibraryRootPathResolver
 {
     public static Result<string> ResolveExistingPath(LibraryRootPolicy root, string requestedPath)
     {
-        if (string.IsNullOrWhiteSpace(requestedPath))
+        if (requestedPath is null)
         {
             return OutsideRoot();
         }
@@ -45,6 +45,42 @@ public static class LibraryRootPathResolver
         }
 
         return IsWithinRoot(resolvedPath, root.CanonicalPath) ? Result.Ok(resolvedPath) : OutsideRoot();
+    }
+
+    public static Result<string> ResolvePathUnderRoot(LibraryRootPolicy root, string requestedPath)
+    {
+        if (requestedPath is null || Path.IsPathFullyQualified(requestedPath)) return OutsideRoot();
+
+        try
+        {
+            var lexicalPath = Path.GetFullPath(requestedPath, root.CanonicalPath);
+            if (!IsWithinRootLexically(lexicalPath, root.CanonicalPath)) return OutsideRoot();
+
+            var relative = Path.GetRelativePath(root.CanonicalPath, lexicalPath);
+            var resolvedPath = root.CanonicalPath;
+            foreach (var segment in relative.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
+            {
+                var candidate = Path.Combine(resolvedPath, segment);
+                if (!Directory.Exists(candidate) && !File.Exists(candidate))
+                {
+                    resolvedPath = Path.Combine(resolvedPath, segment);
+                    continue;
+                }
+
+                var entry = (FileSystemInfo)new DirectoryInfo(candidate);
+                if (entry is DirectoryInfo directory && !directory.Exists) entry = new FileInfo(candidate);
+                resolvedPath = entry.ResolveLinkTarget(returnFinalTarget: true)?.FullName ?? candidate;
+                if (!IsWithinRoot(resolvedPath, root.CanonicalPath)) return OutsideRoot();
+            }
+
+            return IsWithinRoot(resolvedPath, root.CanonicalPath)
+                ? Result.Ok(Path.GetFullPath(resolvedPath))
+                : OutsideRoot();
+        }
+        catch (ArgumentException)
+        {
+            return OutsideRoot();
+        }
     }
 
     internal static bool TryCanonicalizeDirectory(string configuredPath, out string canonicalPath)

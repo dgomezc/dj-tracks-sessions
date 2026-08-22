@@ -108,6 +108,23 @@ public sealed class LibraryRootConfigurationTests
             string.Equals(error.Metadata["errorCode"]?.ToString(), "path.not_found", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public void ResolvePathUnderRoot_rejects_a_directory_symlink_escape()
+    {
+        using var fixture = RootFixture.Create();
+        var outside = Path.Combine(fixture.Directory, "outside");
+        var link = Path.Combine(fixture.Values["MAIN_LIBRARY_PATH"]!, "outside-link");
+        Directory.CreateDirectory(outside);
+        Directory.CreateSymbolicLink(link, outside);
+        var root = LibraryRootConfiguration.Load(fixture.Configuration).Value.Single(root => root.Type == LibraryRootType.Main);
+
+        var result = LibraryRootPathResolver.ResolvePathUnderRoot(root, "outside-link/destination");
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, error =>
+            string.Equals(error.Metadata["errorCode"]?.ToString(), "path.outside_root", StringComparison.Ordinal));
+    }
+
     private sealed class RootFixture : IDisposable
     {
         private RootFixture(string directory, Dictionary<string, string?> values, IConfiguration configuration)

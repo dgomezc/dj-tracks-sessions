@@ -12,7 +12,11 @@
       "console": "internalConsole",
       "env": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "http://localhost:5000"
+        "ASPNETCORE_URLS": "http://localhost:5000",
+        "MAIN_LIBRARY_PATH": "/home/david/repos/dj-tracks-fixtures/main",
+        "PENDING_LIBRARY_PATH": "/home/david/repos/dj-tracks-fixtures/pending",
+        "REMEMBER_LIBRARY_PATH": "/home/david/repos/dj-tracks-fixtures/remember",
+        "SESSIONS_LIBRARY_PATH": "/home/david/repos/dj-tracks-fixtures/sessions"
       },
       "serverReadyAction": {
         "action": "openExternally",

@@ -1,7 +1,9 @@
 using DjTracksSessions.Api;
 using DjTracksSessions.Api.Validation;
 using DjTracksSessions.Api.Features.Configuration.DatabaseConnection;
-using DjTracksSessions.Api.Features.Library.Scan;
+using DjTracksSessions.Api.Features.Library.Metadata;
+using DjTracksSessions.Api.Features.Library.Pending;
+using DjTracksSessions.Api.Features.Library.Browse;
 using DjTracksSessions.Contracts;
 using DjTrackSessions.Infrastructure;
 using FluentResults;
@@ -54,7 +56,9 @@ app.MapHealthChecks("/health", new HealthCheckOptions
 });
 
 app.MapDatabaseConnectionDiagnostic();
-app.MapCatalogScan();
+app.MapTrackMetadata();
+app.MapPendingMove();
+app.MapFilesystemBrowse();
 
 app.MapGet("/examples/{id}", (int id) =>
 {

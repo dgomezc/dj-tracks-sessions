@@ -1,0 +1,49 @@
+@page "/catalogo"
+@using DjTracksSessions.Contracts
+@using DjTracksSessions.Web.Services
+@rendermode InteractiveServer
+
+<section class="track-management-page" aria-labelledby="track-management-title">
+    <header class="track-management-header">
+        <div class="catalog-heading"><p class="eyebrow">Biblioteca / Explorador de archivos</p><h1 id="track-management-title">Gestión de pistas</h1><p>Lectura directa del filesystem · tags actuales como fuente de verdad</p></div>
+        <div class="catalog-heading-meta"><span class="catalog-status" role="status"><i aria-hidden="true"></i>@StatusLabel</span><span class="catalog-root-path">/@SelectedRoot.ToString().ToLowerInvariant()</span></div>
+    </header>
+    <div class="catalog-workspace">
+        <aside class="catalog-sidebar" aria-label="Raíces de biblioteca">
+            <p class="panel-label">Library roots</p>
+            @foreach (var root in Roots)
+            {
+                <button class="root-button @(SelectedRoot == root ? "root-button-active" : "")" type="button" @onclick="() => SelectRootAsync(root)"><span class="root-button-name"><span class="root-glyph" aria-hidden="true">@(root == LibraryRoot.Main ? "◆" : root == LibraryRoot.Pending ? "◌" : "◇")</span>@RootLabel(root)</span><small>@(root == LibraryRoot.Main ? "LIB" : root == LibraryRoot.Pending ? "INBOX" : "KEEP")</small></button>
+            }
+            <div class="session-boundary"><span class="boundary-mark" aria-hidden="true">/</span><div><strong>Sessions</strong><span>Fuera del catálogo ordinario</span></div></div>
+            @if (Browse is not null)
+            {
+                <p class="panel-label folder-label">Folders</p>
+                <button class="tree-item root-folder @(SelectedPath == string.Empty ? "tree-item-active" : "")" type="button" @onclick="() => SelectDirectoryAsync(string.Empty)"><span aria-hidden="true">⌂</span> Root</button>
+                @foreach (var folder in VisibleFolders)
+                {
+                    <div class="tree-row" style="--tree-depth: @folder.Depth">
+                        <button class="tree-toggle" type="button" aria-label="@(folder.IsExpanded ? "Contraer" : "Expandir") @folder.Directory.Name" aria-expanded="@folder.IsExpanded" disabled="@(folder.IsLoaded == false && IsBusy)" @onclick="() => ToggleDirectoryAsync(folder.Directory.RelativePath)">@(folder.IsExpanded ? "⌄" : "›")</button>
+                        <button class="tree-item @(SelectedPath == folder.Directory.RelativePath ? "tree-item-active" : "")" type="button" @onclick="() => SelectDirectoryAsync(folder.Directory.RelativePath)">@folder.Directory.Name</button>
+                    </div>
+                }
+            }
+            <div class="catalog-sync"><span>FS.READY <b aria-hidden="true"></b></span><small>API / filesystem</small></div>
+        </aside>
+        <div class="catalog-content">
+            <div class="filter-bar" aria-label="Filtros de biblioteca"><label class="search-filter"><span>Buscar en biblioteca</span><input @bind="SearchTerm" placeholder="Archivo, artista, título, BPM o clave..." /></label><label><span>Género</span><select @bind="GenreFilter"><option value="">Todos</option>@foreach (var genre in AvailableGenres) { <option value="@genre">@genre</option>}</select></label><label><span>Año</span><select @bind="YearFilter"><option value="">Todos</option>@foreach (var year in AvailableYears) { <option value="@year">@year</option>}</select></label><label><span>Estado</span><select @bind="StateFilter"><option value="">Todos</option><option value="ready">Leídas</option><option value="issues">Con incidencias</option></select></label><button class="clear-filters" type="button" @onclick="ClearFilters">Limpiar</button></div>
+            @if (ErrorMessage is not null) { <div class="state-panel state-error" role="alert"><strong>No se pudo abrir la carpeta</strong><span>@ErrorMessage</span></div> }
+            else if (IsBusy) { <div class="state-panel"><strong>Cargando carpeta...</strong><span>Consultando la API sin requerir PostgreSQL.</span></div> }
+            else if (Browse is null || Browse.AudioFiles.Count == 0) { <div class="state-panel"><strong>Esta carpeta no contiene audio</strong><span>Elegí otra carpeta o raíz.</span></div> }
+            else
+            {
+                <div class="catalog-toolbar"><div><span class="breadcrumb">@SelectedRoot / @(string.IsNullOrEmpty(Browse.RelativePath) ? "root" : Browse.RelativePath)</span><strong>@FilteredTracks.Count() <small>de @Browse.AudioFiles.Count pistas</small></strong></div><span class="toolbar-note">Tags embebidos · solo lectura</span></div>
+                <div class="catalog-grid"><div class="track-table-wrap"><table class="track-table"><thead><tr><th class="art-column">Tipo</th><th>Título / archivo</th><th>Artista</th><th>Año</th><th>Género</th><th class="numeric-column">BPM</th><th>Clave</th></tr></thead><tbody>
+                @foreach (var track in FilteredTracks) { <tr class="@(SelectedAudio == track ? "track-row-selected" : "")" @onclick="() => SelectAudio(track)"><td class="art-column"><span class="file-type" aria-hidden="true">♪</span></td><td><strong>@(track.Title ?? "Sin título")</strong><small>@track.FileName</small></td><td>@(track.Artists.Count == 0 ? "Sin artista" : string.Join(", ", track.Artists))</td><td class="technical-data">@(track.Year?.ToString() ?? "----")</td><td><span class="metadata-tag">@(track.Genres.Count == 0 ? "Sin género" : track.Genres.First())</span></td><td class="numeric-column technical-data">@(track.BeatsPerMinute ?? "---")</td><td><span class="key-cell">@(track.InitialKey ?? "--")</span></td></tr> }
+                </tbody></table>@if (!FilteredTracks.Any()) { <div class="filtered-empty"><strong>No hay coincidencias</strong><span>Ajustá la búsqueda o limpiá los filtros.</span></div> }</div>
+                <aside class="track-detail-panel" aria-label="Detalle de etiquetas">@if (SelectedAudio is null) { <div class="detail-empty-mark" aria-hidden="true">+</div><p class="detail-placeholder">Seleccioná una pista para inspeccionar sus tags y propiedades.</p> } else { <div class="detail-header"><p class="panel-label">Selected track</p><span class="track-state @(SelectedAudio.ErrorCode is null ? "" : "track-state-warning")">@(SelectedAudio.ErrorCode is null ? "Leída" : SelectedAudio.ErrorCode)</span></div><h3>@(SelectedAudio.Title ?? "Sin título")</h3><p class="detail-artist">@(SelectedAudio.Artists.Count == 0 ? "Sin artista" : string.Join(", ", SelectedAudio.Artists))</p><p class="detail-file">@SelectedAudio.FileName</p><div class="detail-metrics"><span><b>@(SelectedAudio.BeatsPerMinute ?? "---")</b><small>BPM</small></span><span><b>@(SelectedAudio.InitialKey ?? "--")</b><small>KEY</small></span><span><b>@FormatDuration(SelectedAudio.Duration)</b><small>DURATION</small></span></div><dl class="detail-list"><dt>Ruta relativa</dt><dd>@SelectedAudio.RelativePath</dd><dt>Álbum</dt><dd>@(SelectedAudio.Album ?? "-")</dd><dt>Año</dt><dd>@(SelectedAudio.Year?.ToString() ?? "-")</dd><dt>Géneros</dt><dd>@(SelectedAudio.Genres.Count == 0 ? "-" : string.Join(", ", SelectedAudio.Genres))</dd><dt>Técnico</dt><dd>@(SelectedAudio.BitrateKbps?.ToString() ?? "-") kbps · @(SelectedAudio.SampleRateHz?.ToString() ?? "-") Hz</dd></dl>@if (SelectedAudio.ErrorMessage is not null) { <p class="state-error">@SelectedAudio.ErrorMessage</p> } }</aside></div>
+            }
+            @if (Browse?.Issues.Count > 0) { <section class="failure-list"><h3>Entradas no disponibles</h3>@foreach (var issue in Browse.Issues) { <p><strong>@issue.RelativePath</strong> @issue.ErrorCode: @issue.ErrorMessage</p> }</section> }
+        </div>
+    </div>
+</section>

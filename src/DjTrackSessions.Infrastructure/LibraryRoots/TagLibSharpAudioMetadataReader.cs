@@ -33,7 +33,7 @@ public sealed class TagLibSharpAudioMetadataReader
                 _ => AudioExtractionOutcome.Failure(file, "tag.unsupported", "The audio extension is not supported for metadata extraction.")
             };
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException or FormatException)
         {
             return AudioExtractionOutcome.Failure(file, "tag.read_failed", exception.Message);
         }
@@ -116,10 +116,14 @@ public sealed class TagLibSharpAudioMetadataReader
             GetValue<string>(tag, "Composer"),
             GetValue<string>(tag, "Isrc"),
             GetValue<string>(tag, "InitialKey"),
-            GetValue<string>(tag, "BeatsPerMinute"));
+             GetValue<string>(tag, "BeatsPerMinute"),
+             GetUserText(tag, "PERSONAL_GENRE"));
 
     private static object? Get(object instance, string name) =>
         instance.GetType().GetProperty(name)?.GetValue(instance);
+
+    private static string? GetUserText(object instance, string key) =>
+        instance.GetType().GetMethod("GetUserText")?.Invoke(instance, [key]) as string;
 
     private static T? GetValue<T>(object instance, string name)
     {

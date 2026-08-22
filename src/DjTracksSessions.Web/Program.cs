@@ -11,6 +11,8 @@ var apiBaseUrl = builder.Configuration["Api:BaseUrl"]
     ?? throw new InvalidOperationException("Api:BaseUrl must be configured.");
 builder.Services.AddHttpClient<DatabaseConnectionDiagnosticClient>(client =>
     client.BaseAddress = new Uri(apiBaseUrl, UriKind.Absolute));
+builder.Services.AddHttpClient<FilesystemLibraryClient>(client =>
+    client.BaseAddress = new Uri(apiBaseUrl, UriKind.Absolute));
 
 var app = builder.Build();
 

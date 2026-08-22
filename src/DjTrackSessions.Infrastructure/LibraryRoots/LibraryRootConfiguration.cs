@@ -62,6 +62,32 @@ public static class LibraryRootConfiguration
             : Result.Fail<IReadOnlyList<LibraryRootPolicy>>(errors);
     }
 
+    public static Result<IReadOnlyList<LibraryRootPolicy>> LoadTrackManagement(IConfiguration configuration)
+    {
+        var roots = new List<LibraryRootPolicy>(3);
+        var errors = new List<IError>();
+        foreach (var (type, key) in RootKeys.Where(item => item.Type != LibraryRootType.Sessions))
+        {
+            var configuredPath = configuration[key];
+            if (string.IsNullOrWhiteSpace(configuredPath))
+            {
+                errors.Add(RootError(type, "root.missing", "is not configured."));
+            }
+            else if (LibraryRootPathResolver.TryCanonicalizeDirectory(configuredPath, out var canonicalPath))
+            {
+                roots.Add(new(type, canonicalPath, CapabilitiesFor(type)));
+            }
+            else
+            {
+                errors.Add(RootError(type, "root.invalid_path", "is not an existing directory."));
+            }
+        }
+
+        return errors.Count == 0
+            ? Result.Ok<IReadOnlyList<LibraryRootPolicy>>(roots)
+            : Result.Fail<IReadOnlyList<LibraryRootPolicy>>(errors);
+    }
+
     private static Error RootError(LibraryRootType type, string code, string detail) =>
         new Error($"Root {type} {detail}")
             .WithMetadata("errorCode", code)
