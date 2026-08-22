@@ -6,10 +6,10 @@ Este archivo registra decisiones establecidas. Cámbialas únicamente con aproba
 
 ## Secuencia de entrega
 
-- Se adopta la **Fase 2A: Entrega con prioridad al catálogo** como etapa inmediata oficial después de las unidades 1-4 completadas de la Fase 2. Sus cuatro unidades son: persistir un escaneo explícito de solo lectura; entregar el catálogo de solo lectura; editar de forma segura los metadatos de texto de un MP3; y mover un MP3 Pending aprobado a Main.
+- Se adopta la **entrega por pantallas** después de la unidad 1 de la Fase 2A. `b1f4df6` completó la persistencia del escaneo explícito de solo lectura. Cierra la pantalla de gestión de pistas, incluidos sus flujos de escaneo, exploración, edición y movimiento Pending aprobado, antes de iniciar la pantalla del reproductor; cierra el reproductor antes de Sessions; inicia el resto de pantallas únicamente después.
 - El MVP de la Fase 2A usa escaneos y operaciones síncronos iniciados manualmente. Los watchers, la reconciliación programada, los jobs durables, la recuperación tras reinicio, las notificaciones y la automatización en segundo plano se aplazan hasta que la escala o el uso real demuestren su necesidad.
 - Persiste únicamente el modelo mínimo necesario para registros confinados a raíces, snapshots técnicos/de etiquetas actuales, hashes de contenido, observaciones de escaneo, estado ausente y elementos de catálogo separados de Sessions. No precrees flujos de proveedores, análisis, historial de carátulas, playlists, reproducción, duplicados o notificaciones para la Fase 2A.
-- Las unidades originales 5-7 de la Fase 2 y las Fases 3-9 siguen siendo alcance posterior. El análisis de proveedores, la reproducción, las playlists, los duplicados, las funciones enriquecidas de Sessions, las operaciones masivas, el deshacer/historial, la eliminación y la automatización se aplazan y requieren aprobación explícita de secuencia antes de convertirse en trabajo inmediato.
+- La siguiente unidad inmediata es la unidad 2 de la Fase 2A, la parte de solo lectura de la pantalla de gestión de pistas. El análisis de proveedores, las playlists, los duplicados, las operaciones masivas, el deshacer/historial, la eliminación y la automatización siguen aplazados. El reproductor y Sessions se secuencian después de cerrar la pantalla de gestión de pistas, no como prerrequisitos de esta.
 
 ## Despliegue
 
@@ -79,7 +79,7 @@ Este archivo registra decisiones establecidas. Cámbialas únicamente con aproba
 ## Reproducción y playlists
 
 - Reproductor global persistente con cola, shuffle, metadatos, carátula y waveform.
-- El mini-reproductor contextual comparte el mismo motor de reproducción.
+- Cuando se introduzca, el mini-reproductor contextual comparte el mismo motor de reproducción que el Player del shell.
 - La cola, la pista actual y la posición sobreviven a los reinicios y se restauran pausadas.
 - Se admiten playlists inteligentes y manuales.
 - Las exportaciones M3U8 admiten el mapeo configurable de rutas NAS a Windows para AIMP y Traktor.

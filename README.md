@@ -8,7 +8,7 @@ Canonical repository: <https://github.com/dgomezc/dj-tracks-and-sessions>
 
 ## Status
 
-Foundation implementation is in progress. The official immediate delivery stage is [Phase 2A: Catalog-First Delivery](PLAN.md#phase-2a-catalog-first-delivery), after the completed Phase 2 Work Units 1-4.
+Foundation implementation is in progress. Phase 2A Work Unit 1, explicit read-only scan persistence, is complete in `b1f4df6`. The next work unit is the Spanish desktop Track Management screen; it is the first of the screen-first sequence in [PLAN.md](PLAN.md#screen-first-delivery-sequence).
 
 Read these documents before changing the project:
 
@@ -54,7 +54,7 @@ Docker Compose will mount four independently configured roots:
 
 ## Execution Rule
 
-Implement [PLAN.md](PLAN.md) in order. Complete and verify one phase before starting the next. Do not implement future items as part of the MVP unless the plan is explicitly amended.
+Implement [PLAN.md](PLAN.md) in order. Close each screen, including its API behavior, UI states, safety flow, and tests, before opening the next: Track Management, Player, Sessions, then remaining screens. Do not implement future items as part of the MVP unless the plan is explicitly amended.
 
 Development runs from a GitHub feature branch in the WSL Linux filesystem. Local build, test, and optional `linux/amd64` image-build checks are the delivery gate; locally built images are not transferred to the NAS. NAS Compose testing happens only when a usable version is manually cloned and checked out on the NAS. See [PLAN.md, Development And Test Deployment Workflow](PLAN.md#151-development-and-test-deployment-workflow).
 

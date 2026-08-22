@@ -10,7 +10,7 @@ Repositorio canónico: <https://github.com/dgomezc/dj-tracks-and-sessions>
 
 ## Estado
 
-La implementación de la base está en curso. La etapa inmediata oficial es la [Fase 2A: Entrega con prioridad al catálogo](PLAN.md#fase-2a-entrega-con-prioridad-al-catalogo), después de las unidades 1-4 completadas de la Fase 2.
+La implementación de la base está en curso. La unidad 1 de la Fase 2A, persistencia del escaneo explícito de solo lectura, está completada en `b1f4df6`. La siguiente unidad es la pantalla de gestión de pistas en español; es la primera de la [secuencia de entrega por pantallas](PLAN.md#secuencia-de-entrega-por-pantallas).
 
 Lee estos documentos antes de modificar el proyecto:
 
@@ -56,7 +56,7 @@ Docker Compose montará cuatro raíces configuradas de forma independiente:
 
 ## Regla de ejecución
 
-Implementa [PLAN.md](PLAN.md) en orden. Completa y verifica una fase antes de comenzar la siguiente. No implementes elementos futuros como parte del MVP salvo que el plan se modifique explícitamente.
+Implementa [PLAN.md](PLAN.md) en orden. Cierra cada pantalla, incluida su API, estados de UI, flujo de seguridad y pruebas, antes de abrir la siguiente: gestión de pistas, reproductor, Sessions y, después, las pantallas restantes. No implementes elementos futuros como parte del MVP salvo que el plan se modifique explícitamente.
 
 El desarrollo se ejecuta desde una rama de funcionalidades de GitHub en el sistema de archivos Linux de WSL. La compilación, las pruebas y las comprobaciones opcionales de imágenes `linux/amd64` locales son la puerta de entrega; las imágenes locales no se transfieren al NAS. Las pruebas de Compose en el NAS solo se realizan cuando una versión utilizable se clona y selecciona manualmente en el NAS. Consulta [PLAN.md, Flujo de desarrollo y despliegue de pruebas](PLAN.md#151-development-and-test-deployment-workflow).
 

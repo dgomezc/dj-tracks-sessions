@@ -1,8 +1,8 @@
 # DJ Tracks & Sessions Implementation Plan
 
-This document is the executable source of truth for product scope, architecture, delivery order, and acceptance criteria. The immediate delivery stage is **Phase 2A: Catalog-First Delivery**, following the completed Phase 2 Work Units 1-4. `SIMPLIFIED_PLAN.md` is the retained rationale for this adopted sequencing.
+This document is the executable source of truth for product scope, architecture, delivery order, and acceptance criteria. `b1f4df6` completed Phase 2A Work Unit 1, explicit read-only scan persistence. The immediate stage is the Track Management screen; delivery then proceeds strictly by complete screens: Track Management, Player, Sessions, then remaining screens.
 
-An implementation agent must complete phases in order. Within a phase, deliver one vertical work unit at a time with its tests. Do not start the next phase until the current phase exit criteria pass.
+An implementation agent must complete phases in order. Within a phase, deliver one vertical work unit at a time with its tests. A screen is not complete until its API behavior, UI states, safety flow, and acceptance evidence are present; do not start the next screen until the current screen exit criteria pass.
 
 ## 1. Product Outcome
 
@@ -476,43 +476,67 @@ This stage is synchronous and manually triggered. It persists only the minimal c
 
 Work units:
 
-1. **Persist an explicit read-only scan.** Scan the four configured roots through the existing confined scanner, extraction, and incremental hashing components; synchronously upsert minimal catalog records, report per-file failures, reconcile unambiguous same-root hash matches, and mark missing records without deleting anything.
-2. **Deliver the read-only catalog.** Add catalog and Sessions query endpoints and a Spanish desktop catalog with root separation, basic text search, and simple filters. No playback, provider actions, bulk actions, or automatic refresh.
-3. **Safely edit one MP3's text metadata.** Provide an exact before/after preview and explicit submit for supported MP3 text fields, including `TXXX:PERSONAL_GENRE`; use confined paths, sibling temporary writes, reopen verification, atomic replacement, and clear unsupported-format failures.
-4. **Move one approved Pending MP3 into Main.** Show and separately confirm the exact source, destination, final filename, and collision result after an approved edit; block collisions and update the catalog only after a verified move.
+1. **Persist an explicit read-only scan (complete in `b1f4df6`).** Scan the four configured roots through the existing confined scanner, extraction, and incremental hashing components; synchronously upsert minimal catalog records, report per-file failures, reconcile unambiguous same-root hash matches, and mark missing records without deleting anything.
+2. **Deliver the read-only Track Management screen (next).** Add ordinary catalog query endpoints and one Spanish desktop screen for manual scan, root-separated Main/Pending/Remember browsing, basic text search, simple filters, track detail, and loading/empty/failure states. Sessions is excluded. No playback, provider actions, bulk actions, metadata writes, or automatic refresh.
+3. **Close Track Management with safe one-MP3 editing.** Add the same screen's exact before/after preview and explicit submit for supported MP3 text fields, including `TXXX:PERSONAL_GENRE`; use confined paths, sibling temporary writes, reopen verification, atomic replacement, and clear unsupported-format failures.
+4. **Close Track Management with one approved Pending-to-Main move.** Add the same screen's separate confirmation of exact source, destination, final filename, and collision result after an approved edit; block collisions and update the catalog only after a verified move.
 
 Exit criteria:
 
 - An explicit scan persists a disposable four-root fixture without source-byte changes, remains idempotent, and reports failures independently.
-- Catalog and Sessions are browsable through separate API contracts and Sessions never enters ordinary catalog queries.
+- The Track Management screen browses Main, Pending, and Remember through ordinary catalog API contracts; Sessions never enters its route, queries, filters, detail, or future queue affordances.
 - A single MP3 text edit preserves unknown tags and leaves the source unchanged on any validation, verification, confinement, or replacement failure.
 - A Pending MP3 move requires separate exact confirmation, blocks collisions without suffixes, and never moves Main or Remember files.
 
 Rollback boundary: each unit rolls back its migration, API/Web changes, and disposable-fixture tests; source media remains untouched except for the explicitly confirmed, verified MP3 write or Pending move.
 
-The original Phase 2 Work Units 5-7 and Phases 3-9 remain later roadmap scope. Their automation and feature requirements are not prerequisites for Phase 2A and must not be described as the next immediate work.
+The original Phase 2 Work Units 5-7 and all screens after Track Management remain later roadmap scope. Their automation and feature requirements are not prerequisites for Phase 2A and must not be described as the next immediate work.
 
-### Phase 3: Playback
+### Screen-First Delivery Sequence
 
-Goal: make the catalog usable as a music player.
+1. **Track Management screen.** Complete Phase 2A Work Units 2-4: read-only scan/browse/detail UI, one-MP3 safe edit, and one separately confirmed Pending move. Do not start Player or Sessions UI before its exit criteria pass.
+2. **Player screen.** Complete the catalog Player UI and its supporting Range/API, shared playback service, queue, visible states, and tests. It provides one shell-mounted Player surface, not a contextual mini-player. Sessions remains outside the player and its queue. Waveforms, persisted playback, shuffle/repeat, mini-player integration, and shortcuts are deferred unless explicitly added to this screen's approved work units.
+3. **Sessions screen.** Complete isolated Sessions queries, explorer/detail, its own player, read-only tracklist resolution, visible ambiguity/error states, and tests. Sessions must never enter track search, the global queue, playlists, duplicate detection, providers, or automatic analysis.
+4. **Remaining screens.** Only after the first three screens close, sequence Analyzer/Tagger, playlists, duplicates, advanced metadata/history/deletion, and operational screens as independent vertical work units.
+
+### Phase 3: Player Screen
+
+Goal: deliver the complete catalog Player screen after Track Management closes.
 
 Work units:
 
 1. Range-enabled audio endpoint with format-appropriate content type.
-2. Global playback service and persistent shell player.
-3. Queue CRUD and persisted playback session.
-4. Shuffle cycle/history and repeat.
-5. Waveform job/cache/API and interactive component.
-6. Mini-player integration and keyboard shortcuts.
+2. One shared frontend playback service and shell-mounted Player surface; no contextual mini-player.
+3. In-memory queue controls: add, remove, clear, previous, next, volume, and seek.
+4. Player loading, unavailable, ended, and single-active-audio states with focused tests.
 
 Exit criteria:
 
 - Seeking works without downloading the full file first.
 - Navigation does not interrupt playback.
-- Global and mini controls never play different tracks simultaneously.
-- Queue and position restore paused after restart.
+- The shell-mounted Player remains the only catalog playback control surface in this phase.
+- Sessions never enters the global queue or Player screen.
 
-### Phase 4: Safe Metadata Editing
+Deferred after the Player screen: persisted queue/position, shuffle/repeat, waveform, contextual mini-player integration, and keyboard shortcuts. When a mini-player is approved, it must coordinate through the same frontend playback service.
+
+### Phase 4: Sessions Screen
+
+Goal: deliver the complete isolated Sessions screen after Player closes.
+
+Work units:
+
+1. Session queries and year/folder explorer.
+2. Session detail and supported manual metadata editing.
+3. Separate player with no persisted position.
+4. Tracklist resolution, ambiguity state, and read-only display.
+
+Exit criteria:
+
+- Sessions do not appear in track searches, global queue, playlists, or duplicate jobs.
+- No automatic provider analysis is available for Sessions.
+- Matching TXT displays while the session plays and remains unchanged.
+
+### Phase 5: Advanced Safe Metadata Editing
 
 Goal: edit original files with preview, verification, and undo.
 
@@ -535,7 +559,7 @@ Exit criteria:
 - Undo restores tags, artwork, name, and path for verified fixtures.
 - Failed batch items do not invalidate successful independent items.
 
-### Phase 5: Identification And Analysis
+### Phase 6: Identification And Analysis
 
 Goal: generate explainable metadata proposals.
 
@@ -558,7 +582,7 @@ Exit criteria:
 - Remember proposals force PersonalGenre to Remember.
 - Key writes as valid Camelot notation.
 
-### Phase 6: Pending Workflow
+### Phase 7: Advanced Pending Workflow
 
 Goal: process the inbox safely from detection to confirmed movement.
 
@@ -580,7 +604,7 @@ Exit criteria:
 - A collision blocks the move without creating a suffixed filename.
 - Completed tracks appear correctly in Main after reconciliation.
 
-### Phase 7: Playlists And Duplicates
+### Phase 8: Playlists And Duplicates
 
 Goal: support listening workflows and safe library cleanup.
 
@@ -599,23 +623,6 @@ Exit criteria:
 - Manual playlist order survives file moves.
 - Export preview contains host-visible paths.
 - Duplicate deletion remains an explicit confirmed action.
-
-### Phase 8: Sessions
-
-Goal: deliver the independent sessions experience.
-
-Work units:
-
-1. Session indexing and year/folder explorer.
-2. Session detail and manual metadata editing.
-3. Separate player with waveform and no persisted position.
-4. Tracklist resolution, ambiguity state, and read-only display.
-
-Exit criteria:
-
-- Sessions do not appear in track searches, global queue, playlists, or duplicate jobs.
-- No automatic provider analysis is available for Sessions.
-- Matching TXT displays while the session plays and remains unchanged.
 
 ### Phase 9: NAS Hardening And Release
 

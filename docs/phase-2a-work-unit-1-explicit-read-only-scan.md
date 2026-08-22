@@ -1,6 +1,8 @@
-# Phase 2A Work Unit 1: Explicit Read-Only Scan
+# Phase 2A Work Unit 1: Explicit Read-Only Scan (Complete)
 
 ## Scope
+
+Completed in `b1f4df6` (`feat: persist explicit catalog scans`). The next work unit is Phase 2A Work Unit 2, the read-only Track Management screen. This record preserves the completed unit's scope and evidence.
 
 The API exposes `POST /library/scan`. The request is manually triggered and runs the existing confined scanner, read-only metadata extraction, and incremental SHA-256 hashing during the HTTP request. It does not create jobs, watchers, provider records, analysis records, or file mutations.
 

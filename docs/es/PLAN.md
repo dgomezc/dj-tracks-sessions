@@ -2,9 +2,9 @@
 
 > Traducción al español. El documento original en inglés se conserva en `../../PLAN.md`.
 
-Este documento es la fuente ejecutable de verdad para el alcance del producto, la arquitectura, el orden de entrega y los criterios de aceptación. La etapa inmediata es la **Fase 2A: Entrega con prioridad al catálogo**, después de las unidades 1-4 completadas de la Fase 2. `SIMPLIFIED_PLAN.md` conserva la justificación de esta secuencia adoptada.
+Este documento es la fuente ejecutable de verdad para el alcance del producto, la arquitectura, el orden de entrega y los criterios de aceptación. `b1f4df6` completó la unidad 1 de la Fase 2A, persistencia del escaneo explícito de solo lectura. La etapa inmediata es la pantalla de gestión de pistas; la entrega continúa estrictamente por pantallas completas: gestión de pistas, reproductor, Sessions y después las pantallas restantes.
 
-Un agente de implementación debe completar las fases en orden. Dentro de una fase, entrega una unidad de trabajo vertical cada vez junto con sus pruebas. No comiences la siguiente fase hasta que pasen los criterios de salida de la fase actual.
+Un agente de implementación debe completar las fases en orden. Dentro de una fase, entrega una unidad de trabajo vertical cada vez junto con sus pruebas. Una pantalla no está completa hasta que existen su comportamiento API, estados de UI, flujo de seguridad y evidencias de aceptación; no comiences la siguiente pantalla hasta que pasen los criterios de salida de la actual.
 
 ## 1. Resultado del producto
 
@@ -478,43 +478,67 @@ Esta etapa es síncrona y se inicia manualmente. Persiste únicamente el modelo 
 
 Unidades de trabajo:
 
-1. **Persistir un escaneo explícito de solo lectura.** Escanear las cuatro raíces configuradas mediante el scanner confinado, la extracción y el hashing incremental existentes; hacer upsert síncrono del modelo mínimo, informar fallos por archivo, reconciliar coincidencias inequívocas por hash dentro de la misma raíz y marcar ausentes sin borrar nada.
-2. **Entregar el catálogo de solo lectura.** Añadir endpoints de consulta para catálogo y Sessions y un catálogo de escritorio en español con separación por raíz, búsqueda de texto básica y filtros simples. Sin reproducción, acciones de proveedores, acciones masivas ni actualización automática.
-3. **Editar de forma segura los metadatos de texto de un MP3.** Ofrecer vista previa exacta antes/después y envío explícito para campos de texto MP3 compatibles, incluido `TXXX:PERSONAL_GENRE`; usar rutas confinadas, escritura temporal hermana, verificación al reabrir, reemplazo atómico y fallos claros para formatos no compatibles.
-4. **Mover un MP3 Pending aprobado a Main.** Mostrar y confirmar por separado el origen exacto, destino, nombre final y resultado de colisión después de una edición aprobada; bloquear colisiones y actualizar el catálogo únicamente tras un movimiento verificado.
+1. **Persistir un escaneo explícito de solo lectura (completado en `b1f4df6`).** Escanear las cuatro raíces configuradas mediante el scanner confinado, la extracción y el hashing incremental existentes; hacer upsert síncrono del modelo mínimo, informar fallos por archivo, reconciliar coincidencias inequívocas por hash dentro de la misma raíz y marcar ausentes sin borrar nada.
+2. **Entregar la pantalla de gestión de pistas de solo lectura (siguiente).** Añadir endpoints de consulta del catálogo ordinario y una pantalla de escritorio en español para escaneo manual, exploración separada de Main/Pending/Remember, búsqueda de texto básica, filtros simples, detalle de pista y estados de carga/vacío/fallo. Sessions queda excluida. Sin reproducción, acciones de proveedores, acciones masivas, escrituras de metadatos ni actualización automática.
+3. **Cerrar la gestión de pistas con edición segura de un MP3.** Añadir en la misma pantalla una vista previa exacta antes/después y envío explícito para campos de texto MP3 compatibles, incluido `TXXX:PERSONAL_GENRE`; usar rutas confinadas, escritura temporal hermana, verificación al reabrir, reemplazo atómico y fallos claros para formatos no compatibles.
+4. **Cerrar la gestión de pistas con un movimiento Pending a Main aprobado.** Añadir en la misma pantalla la confirmación separada de origen exacto, destino, nombre final y resultado de colisión después de una edición aprobada; bloquear colisiones y actualizar el catálogo únicamente tras un movimiento verificado.
 
 Criterios de salida:
 
 - Un escaneo explícito persiste un fixture desechable de cuatro raíces sin cambiar los bytes originales, es idempotente e informa los fallos de forma independiente.
-- El catálogo y Sessions se pueden explorar mediante contratos de API separados y Sessions nunca entra en las consultas ordinarias.
+- La pantalla de gestión de pistas explora Main, Pending y Remember mediante contratos API ordinarios; Sessions nunca entra en su ruta, consultas, filtros, detalle ni futuros controles de cola.
 - Una edición de texto de un MP3 conserva etiquetas desconocidas y deja el origen intacto ante cualquier fallo de validación, verificación, confinamiento o reemplazo.
 - Un movimiento de MP3 Pending requiere confirmación exacta separada, bloquea colisiones sin sufijos y nunca mueve archivos de Main o Remember.
 
 Límite de rollback: cada unidad revierte su migración, cambios de API/Web y pruebas con fixtures desechables; los archivos fuente permanecen intactos salvo la escritura MP3 o el movimiento Pending explícitamente confirmado y verificado.
 
-Las unidades originales 5-7 de la Fase 2 y las Fases 3-9 siguen siendo alcance posterior. Su automatización y requisitos no son prerrequisitos de la Fase 2A y no deben describirse como el próximo trabajo inmediato.
+Las unidades originales 5-7 de la Fase 2 y todas las pantallas posteriores a gestión de pistas siguen siendo alcance posterior. Su automatización y requisitos no son prerrequisitos de la Fase 2A y no deben describirse como el próximo trabajo inmediato.
 
-### Fase 3: Reproducción
+### Secuencia de entrega por pantallas
 
-Objetivo: convertir el catálogo en un reproductor musical utilizable.
+1. **Pantalla de gestión de pistas.** Completa las unidades 2-4 de la Fase 2A: UI de escaneo/exploración/detalle de solo lectura, edición segura de un MP3 y un movimiento Pending con confirmación separada. No inicies UI de reproductor ni de Sessions antes de que pasen sus criterios de salida.
+2. **Pantalla del reproductor.** Completa la UI del reproductor de catálogo y su soporte Range/API, servicio de reproducción compartido, cola, estados visibles y pruebas. Incluye una única superficie Player montada en el shell, no un mini-reproductor contextual. Sessions queda fuera del reproductor y su cola. Waveforms, reproducción persistida, shuffle/repeat, integración de mini-reproductor y atajos se aplazan salvo que se añadan explícitamente a las unidades aprobadas de esta pantalla.
+3. **Pantalla de Sessions.** Completa consultas aisladas de Sessions, explorer/detalle, su reproductor propio, resolución y presentación de tracklist de solo lectura, estados visibles de ambigüedad/error y pruebas. Sessions nunca entra en la búsqueda de pistas, cola global, playlists, detección de duplicados, proveedores ni análisis automático.
+4. **Pantallas restantes.** Solo después de cerrar las tres primeras pantallas, secuencia Analyzer/Tagger, playlists, duplicados, edición avanzada de metadatos/historial/eliminación y pantallas operativas como unidades verticales independientes.
+
+### Fase 3: Pantalla del reproductor
+
+Objetivo: entregar la pantalla completa del reproductor de catálogo después de cerrar gestión de pistas.
 
 Unidades de trabajo:
 
 1. Endpoint de audio con Range y content type apropiado para el formato.
-2. Servicio de reproducción global y reproductor persistente del shell.
-3. CRUD de cola y sesión de reproducción persistida.
-4. Ciclo/historial de shuffle y repeat.
-5. Job/caché/API de waveform y componente interactivo.
-6. Integración del mini-reproductor y atajos de teclado.
+2. Un único servicio frontend de reproducción compartido y superficie Player montada en el shell; sin mini-reproductor contextual.
+3. Controles de cola en memoria: añadir, quitar, limpiar, anterior, siguiente, volumen y seek.
+4. Estados de carga, no disponible, finalizado y un único audio activo, con pruebas específicas.
 
 Criterios de salida:
 
 - El seek funciona sin descargar primero el archivo completo.
 - La navegación no interrumpe la reproducción.
-- Los controles globales y mini nunca reproducen pistas diferentes simultáneamente.
-- La cola y la posición se restauran en pausa después de reiniciar.
+- El Player montado en el shell es la única superficie de control de reproducción de catálogo en esta fase.
+- Sessions nunca entra en la cola global ni en la pantalla del reproductor.
 
-### Fase 4: Edición segura de metadatos
+Se aplazan para después de la pantalla del reproductor: cola/posición persistida, shuffle/repeat, waveform, integración de mini-reproductor contextual y atajos de teclado. Cuando se apruebe un mini-reproductor, debe coordinarse mediante el mismo servicio frontend de reproducción.
+
+### Fase 4: Pantalla de Sessions
+
+Objetivo: entregar la pantalla completa e independiente de Sessions después de cerrar el reproductor.
+
+Unidades de trabajo:
+
+1. Consultas de Sessions y explorer por año/carpeta.
+2. Detalle de sesión y edición manual de metadatos compatibles.
+3. Reproductor separado sin posición persistida.
+4. Resolución de tracklists, estado de ambigüedad y presentación de solo lectura.
+
+Criterios de salida:
+
+- Sessions no aparece en búsquedas de pistas, cola global, playlists ni jobs de duplicados.
+- No hay análisis automático de proveedores disponible para Sessions.
+- El TXT correspondiente se muestra mientras se reproduce la sesión y permanece sin cambios.
+
+### Fase 5: Edición segura avanzada de metadatos
 
 Objetivo: editar archivos originales con vista previa, verificación y deshacer.
 
@@ -537,7 +561,7 @@ Criterios de salida:
 - Deshacer restaura etiquetas, carátula, nombre y ruta en fixtures verificados.
 - Los elementos fallidos de un lote no invalidan elementos independientes exitosos.
 
-### Fase 5: Identificación y análisis
+### Fase 6: Identificación y análisis
 
 Objetivo: generar propuestas de metadatos explicables.
 
@@ -560,7 +584,7 @@ Criterios de salida:
 - Las propuestas Remember fuerzan `PersonalGenre` a Remember.
 - Las tonalidades se escriben en notación Camelot válida.
 
-### Fase 6: Flujo Pending
+### Fase 7: Flujo Pending avanzado
 
 Objetivo: procesar la bandeja de entrada de forma segura, desde la detección hasta el movimiento confirmado.
 
@@ -582,7 +606,7 @@ Criterios de salida:
 - Una colisión bloquea el movimiento sin crear un nombre con sufijo.
 - Las pistas completadas aparecen correctamente en Main después de la reconciliación.
 
-### Fase 7: Playlists y duplicados
+### Fase 8: Playlists y duplicados
 
 Objetivo: admitir flujos de escucha y limpieza segura de la biblioteca.
 
@@ -601,23 +625,6 @@ Criterios de salida:
 - El orden de las playlists manuales sobrevive a los movimientos de archivos.
 - La vista previa de exportación contiene rutas visibles para el host.
 - La eliminación de duplicados sigue siendo una acción explícita y confirmada.
-
-### Fase 8: Sessions
-
-Objetivo: entregar la experiencia independiente de sesiones.
-
-Unidades de trabajo:
-
-1. Indexación de sesiones y explorer por año/carpeta.
-2. Detalle de sesión y edición manual de metadatos.
-3. Reproductor separado con waveform y sin posición persistida.
-4. Resolución de tracklists, estado de ambigüedad y presentación de solo lectura.
-
-Criterios de salida:
-
-- Sessions no aparece en búsquedas de pistas, cola global, playlists ni jobs de duplicados.
-- No hay análisis automático de proveedores disponible para Sessions.
-- El TXT correspondiente se muestra mientras se reproduce la sesión y permanece sin cambios.
 
 ### Fase 9: Refuerzo y lanzamiento en NAS
 

@@ -4,10 +4,10 @@ This file records settled decisions. Change them only with explicit product appr
 
 ## Delivery Sequencing
 
-- Adopt **Phase 2A: Catalog-First Delivery** as the official immediate stage after the completed Phase 2 Work Units 1-4. Its four work units are: persist an explicit read-only scan; deliver the read-only catalog; safely edit one MP3's text metadata; and move one approved Pending MP3 into Main.
+- Adopt **screen-first delivery** after Phase 2A Work Unit 1. `b1f4df6` completed explicit read-only scan persistence. Finish the Track Management screen, including its scan, browse, edit, and approved Pending-move flows, before starting the Player screen; finish Player before Sessions; start all remaining screens only afterwards.
 - The Phase 2A MVP uses synchronous, manually triggered scans and operations. Filesystem watchers, scheduled reconciliation, durable jobs, restart recovery, notifications, and background automation are deferred until actual scale or usage demonstrates the need.
 - Persist only the minimal catalog model needed for root-scoped records, current technical/tag snapshots, content hashes, scan observations, missing state, and separate Session catalog items. Do not pre-create provider, analysis, artwork-history, playlist, playback, duplicate, or notification workflows for Phase 2A.
-- The original Phase 2 Work Units 5-7 and Phases 3-9 remain later roadmap scope. Provider analysis, playback, playlists, duplicates, rich Sessions, bulk operations, undo/history, deletion, and automation are deferred and require explicit sequencing approval before becoming immediate work.
+- The immediate next work unit is Phase 2A Work Unit 2, the read-only portion of the Track Management screen. Provider analysis, playlists, duplicates, bulk operations, undo/history, deletion, and automation remain deferred. Player and Sessions are sequenced after the Track Management screen rather than being prerequisites for it.
 
 ## Deployment
 
@@ -77,7 +77,7 @@ This file records settled decisions. Change them only with explicit product appr
 ## Playback And Playlists
 
 - Global persistent player with queue, shuffle, metadata, artwork, and waveform.
-- Contextual mini-player shares the same playback engine.
+- When introduced, a contextual mini-player shares the same playback engine as the shell Player.
 - Queue, current track, and position survive restarts and restore paused.
 - Smart and manual playlists are supported.
 - M3U8 exports support configurable NAS-to-Windows path mapping for AIMP and Traktor.
