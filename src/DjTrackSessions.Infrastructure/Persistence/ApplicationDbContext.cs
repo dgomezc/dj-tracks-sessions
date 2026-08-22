@@ -8,10 +8,6 @@ namespace DjTrackSessions.Infrastructure.Persistence;
 
 public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
 {
-    public DbSet<CatalogTrack> CatalogTracks => Set<CatalogTrack>();
-
-    public DbSet<CatalogTrackMetadata> CatalogTrackMetadata => Set<CatalogTrackMetadata>();
-
     public DbSet<SessionCatalogItem> SessionCatalogItems => Set<SessionCatalogItem>();
 
     public DbSet<ApplicationSetting> ApplicationSettings => Set<ApplicationSetting>();
