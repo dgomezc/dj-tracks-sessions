@@ -1,6 +1,7 @@
 using DjTracksSessions.Api;
 using DjTracksSessions.Api.Validation;
 using DjTracksSessions.Api.Features.Configuration.DatabaseConnection;
+using DjTracksSessions.Api.Features.Library.Scan;
 using DjTracksSessions.Contracts;
 using DjTrackSessions.Infrastructure;
 using FluentResults;
@@ -53,6 +54,7 @@ app.MapHealthChecks("/health", new HealthCheckOptions
 });
 
 app.MapDatabaseConnectionDiagnostic();
+app.MapCatalogScan();
 
 app.MapGet("/examples/{id}", (int id) =>
 {
