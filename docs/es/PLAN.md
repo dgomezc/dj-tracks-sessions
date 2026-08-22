@@ -2,7 +2,7 @@
 
 > Traducción al español. El documento original en inglés se conserva en `../../PLAN.md`.
 
-Este documento es la fuente ejecutable de verdad para el alcance del producto, la arquitectura, el orden de entrega y los criterios de aceptación.
+Este documento es la fuente ejecutable de verdad para el alcance del producto, la arquitectura, el orden de entrega y los criterios de aceptación. La etapa inmediata es la **Fase 2A: Entrega con prioridad al catálogo**, después de las unidades 1-4 completadas de la Fase 2. `SIMPLIFIED_PLAN.md` conserva la justificación de esta secuencia adoptada.
 
 Un agente de implementación debe completar las fases en orden. Dentro de una fase, entrega una unidad de trabajo vertical cada vez junto con sus pruebas. No comiences la siguiente fase hasta que pasen los criterios de salida de la fase actual.
 
@@ -443,27 +443,56 @@ Criterios de salida:
 - Una versión utilizable seleccionada manualmente puede probarse en el NAS usando configuración exclusiva del NAS y raíces desechables, sin credenciales codificadas.
 - Un fallo de configuración, migración, inicio, health check o smoke check es visible sin habilitar montajes de bibliotecas reales.
 
-### Fase 2: Índice de la biblioteca
+### Fase 2: Índice de la biblioteca (base completada hasta la unidad 4)
 
 Objetivo: establecer un catálogo confiable y de solo lectura.
 
-Unidades de trabajo:
+Unidades de trabajo completadas:
 
 1. Configurar y validar políticas de raíces.
 2. Escanear audio compatible y archivos TXT de sesiones.
 3. Extraer propiedades técnicas y etiquetas actuales.
 4. Calcular incrementalmente una identidad hash estable.
-5. Reconciliar archivos renombrados, movidos, modificados y ausentes.
-6. Vigilar las raíces y programar la reconciliación completa.
-7. Construir árbol de carpetas, cuadrícula de catálogo, búsqueda y filtros requeridos.
 
-Criterios de salida:
+Unidades originales aplazadas:
+
+5. Reconciliar archivos renombrados, movidos, modificados y ausentes. Sustituida para la entrega inmediata por la reconciliación más simple de la unidad 1 de la Fase 2A.
+6. Vigilar las raíces y programar la reconciliación completa. Aplazada; la Fase 2A usa escaneos manuales explícitos.
+7. Construir árbol de carpetas, cuadrícula de catálogo, búsqueda y filtros requeridos. Sustituida para la entrega inmediata por el catálogo de solo lectura más pequeño de la unidad 2 de la Fase 2A.
+
+Criterios de salida originales de la Fase 2, ahora aplazados o cubiertos mediante la Fase 2A y el trabajo posterior del roadmap:
 
 - Las cuatro raíces se indexan sin modificar archivos.
 - Los escaneos repetidos son idempotentes.
 - Los movimientos se correlacionan por identidad cuando es posible.
 - Se rechaza la navegación fuera de las raíces configuradas.
 - Main/Pending/Remember son visiblemente distintos; Sessions está separada.
+
+La Fase 2 no es la cola de implementación inmediata. Continúa con la Fase 2A siguiente; vuelve al trabajo aplazado de la Fase 2 únicamente mediante una modificación explícita del plan.
+
+### Fase 2A: Entrega con prioridad al catálogo (inmediata)
+
+Objetivo: entregar un catálogo útil y el flujo mínimo seguro de organización antes de la automatización, el análisis de proveedores, la reproducción y las funciones especializadas.
+
+Esta etapa es síncrona y se inicia manualmente. Persiste únicamente el modelo mínimo del catálogo, mantiene Sessions separada y conserva todos los límites de seguridad del sistema de archivos existentes.
+
+Unidades de trabajo:
+
+1. **Persistir un escaneo explícito de solo lectura.** Escanear las cuatro raíces configuradas mediante el scanner confinado, la extracción y el hashing incremental existentes; hacer upsert síncrono del modelo mínimo, informar fallos por archivo, reconciliar coincidencias inequívocas por hash dentro de la misma raíz y marcar ausentes sin borrar nada.
+2. **Entregar el catálogo de solo lectura.** Añadir endpoints de consulta para catálogo y Sessions y un catálogo de escritorio en español con separación por raíz, búsqueda de texto básica y filtros simples. Sin reproducción, acciones de proveedores, acciones masivas ni actualización automática.
+3. **Editar de forma segura los metadatos de texto de un MP3.** Ofrecer vista previa exacta antes/después y envío explícito para campos de texto MP3 compatibles, incluido `TXXX:PERSONAL_GENRE`; usar rutas confinadas, escritura temporal hermana, verificación al reabrir, reemplazo atómico y fallos claros para formatos no compatibles.
+4. **Mover un MP3 Pending aprobado a Main.** Mostrar y confirmar por separado el origen exacto, destino, nombre final y resultado de colisión después de una edición aprobada; bloquear colisiones y actualizar el catálogo únicamente tras un movimiento verificado.
+
+Criterios de salida:
+
+- Un escaneo explícito persiste un fixture desechable de cuatro raíces sin cambiar los bytes originales, es idempotente e informa los fallos de forma independiente.
+- El catálogo y Sessions se pueden explorar mediante contratos de API separados y Sessions nunca entra en las consultas ordinarias.
+- Una edición de texto de un MP3 conserva etiquetas desconocidas y deja el origen intacto ante cualquier fallo de validación, verificación, confinamiento o reemplazo.
+- Un movimiento de MP3 Pending requiere confirmación exacta separada, bloquea colisiones sin sufijos y nunca mueve archivos de Main o Remember.
+
+Límite de rollback: cada unidad revierte su migración, cambios de API/Web y pruebas con fixtures desechables; los archivos fuente permanecen intactos salvo la escritura MP3 o el movimiento Pending explícitamente confirmado y verificado.
+
+Las unidades originales 5-7 de la Fase 2 y las Fases 3-9 siguen siendo alcance posterior. Su automatización y requisitos no son prerrequisitos de la Fase 2A y no deben describirse como el próximo trabajo inmediato.
 
 ### Fase 3: Reproducción
 

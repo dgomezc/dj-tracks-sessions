@@ -8,7 +8,7 @@ Canonical repository: <https://github.com/dgomezc/dj-tracks-and-sessions>
 
 ## Status
 
-Foundation implementation is in progress.
+Foundation implementation is in progress. The official immediate delivery stage is [Phase 2A: Catalog-First Delivery](PLAN.md#phase-2a-catalog-first-delivery), after the completed Phase 2 Work Units 1-4.
 
 Read these documents before changing the project:
 

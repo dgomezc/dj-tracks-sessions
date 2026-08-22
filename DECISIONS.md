@@ -2,6 +2,13 @@
 
 This file records settled decisions. Change them only with explicit product approval.
 
+## Delivery Sequencing
+
+- Adopt **Phase 2A: Catalog-First Delivery** as the official immediate stage after the completed Phase 2 Work Units 1-4. Its four work units are: persist an explicit read-only scan; deliver the read-only catalog; safely edit one MP3's text metadata; and move one approved Pending MP3 into Main.
+- The Phase 2A MVP uses synchronous, manually triggered scans and operations. Filesystem watchers, scheduled reconciliation, durable jobs, restart recovery, notifications, and background automation are deferred until actual scale or usage demonstrates the need.
+- Persist only the minimal catalog model needed for root-scoped records, current technical/tag snapshots, content hashes, scan observations, missing state, and separate Session catalog items. Do not pre-create provider, analysis, artwork-history, playlist, playback, duplicate, or notification workflows for Phase 2A.
+- The original Phase 2 Work Units 5-7 and Phases 3-9 remain later roadmap scope. Provider analysis, playback, playlists, duplicates, rich Sessions, bulk operations, undo/history, deletion, and automation are deferred and require explicit sequencing approval before becoming immediate work.
+
 ## Deployment
 
 - Product name: **DJ Tracks & Sessions**.

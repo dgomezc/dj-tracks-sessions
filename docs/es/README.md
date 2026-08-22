@@ -10,7 +10,7 @@ Repositorio canónico: <https://github.com/dgomezc/dj-tracks-and-sessions>
 
 ## Estado
 
-La implementación de la base está en curso.
+La implementación de la base está en curso. La etapa inmediata oficial es la [Fase 2A: Entrega con prioridad al catálogo](PLAN.md#fase-2a-entrega-con-prioridad-al-catalogo), después de las unidades 1-4 completadas de la Fase 2.
 
 Lee estos documentos antes de modificar el proyecto:
 

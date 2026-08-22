@@ -4,6 +4,13 @@
 
 Este archivo registra decisiones establecidas. Cámbialas únicamente con aprobación explícita del producto.
 
+## Secuencia de entrega
+
+- Se adopta la **Fase 2A: Entrega con prioridad al catálogo** como etapa inmediata oficial después de las unidades 1-4 completadas de la Fase 2. Sus cuatro unidades son: persistir un escaneo explícito de solo lectura; entregar el catálogo de solo lectura; editar de forma segura los metadatos de texto de un MP3; y mover un MP3 Pending aprobado a Main.
+- El MVP de la Fase 2A usa escaneos y operaciones síncronos iniciados manualmente. Los watchers, la reconciliación programada, los jobs durables, la recuperación tras reinicio, las notificaciones y la automatización en segundo plano se aplazan hasta que la escala o el uso real demuestren su necesidad.
+- Persiste únicamente el modelo mínimo necesario para registros confinados a raíces, snapshots técnicos/de etiquetas actuales, hashes de contenido, observaciones de escaneo, estado ausente y elementos de catálogo separados de Sessions. No precrees flujos de proveedores, análisis, historial de carátulas, playlists, reproducción, duplicados o notificaciones para la Fase 2A.
+- Las unidades originales 5-7 de la Fase 2 y las Fases 3-9 siguen siendo alcance posterior. El análisis de proveedores, la reproducción, las playlists, los duplicados, las funciones enriquecidas de Sessions, las operaciones masivas, el deshacer/historial, la eliminación y la automatización se aplazan y requieren aprobación explícita de secuencia antes de convertirse en trabajo inmediato.
+
 ## Despliegue
 
 - Nombre del producto: **DJ Tracks & Sessions**.

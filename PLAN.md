@@ -1,6 +1,6 @@
 # DJ Tracks & Sessions Implementation Plan
 
-This document is the executable source of truth for product scope, architecture, delivery order, and acceptance criteria.
+This document is the executable source of truth for product scope, architecture, delivery order, and acceptance criteria. The immediate delivery stage is **Phase 2A: Catalog-First Delivery**, following the completed Phase 2 Work Units 1-4. `SIMPLIFIED_PLAN.md` is the retained rationale for this adopted sequencing.
 
 An implementation agent must complete phases in order. Within a phase, deliver one vertical work unit at a time with its tests. Do not start the next phase until the current phase exit criteria pass.
 
@@ -441,27 +441,56 @@ Exit criteria:
 - A manually selected usable version can be tested on the NAS using NAS-only configuration and disposable roots without hardcoded credentials.
 - A failed configuration, migration, startup, health check, or smoke check is visible without enabling real-library mounts.
 
-### Phase 2: Library Index
+### Phase 2: Library Index (Foundation Complete Through Work Unit 4)
 
 Goal: establish a trustworthy, read-only catalog.
 
-Work units:
+Completed work units:
 
 1. Configure and validate root policies.
 2. Scan supported audio and session TXT files.
 3. Extract technical properties and current tags.
 4. Calculate stable hash identity incrementally.
-5. Reconcile renamed, moved, changed, and missing files.
-6. Watch roots and schedule full reconciliation.
-7. Build folder tree, catalog grid, search, and required filters.
 
-Exit criteria:
+Deferred original work units:
+
+5. Reconcile renamed, moved, changed, and missing files. Superseded for immediate delivery by the simpler reconciliation in Phase 2A Work Unit 1.
+6. Watch roots and schedule full reconciliation. Deferred; Phase 2A uses explicit manual scans.
+7. Build folder tree, catalog grid, search, and required filters. Superseded for immediate delivery by Phase 2A Work Unit 2's smaller read-only catalog.
+
+Original Phase 2 exit criteria, now deferred or fulfilled through Phase 2A and later roadmap work:
 
 - All four roots index without modifying files.
 - Repeated scans are idempotent.
 - Moves are correlated by identity where possible.
 - Traversal outside configured roots is rejected.
 - Main/Pending/Remember are visibly distinct; Sessions is separate.
+
+Phase 2 is not the immediate implementation queue. Continue with Phase 2A below; return to deferred Phase 2 work only through an explicit plan amendment.
+
+### Phase 2A: Catalog-First Delivery (Immediate)
+
+Goal: deliver a useful catalog and the smallest safe organization workflow before automation, provider analysis, playback, and specialist features.
+
+This stage is synchronous and manually triggered. It persists only the minimal catalog model, keeps Sessions separate, and preserves all existing filesystem safety boundaries.
+
+Work units:
+
+1. **Persist an explicit read-only scan.** Scan the four configured roots through the existing confined scanner, extraction, and incremental hashing components; synchronously upsert minimal catalog records, report per-file failures, reconcile unambiguous same-root hash matches, and mark missing records without deleting anything.
+2. **Deliver the read-only catalog.** Add catalog and Sessions query endpoints and a Spanish desktop catalog with root separation, basic text search, and simple filters. No playback, provider actions, bulk actions, or automatic refresh.
+3. **Safely edit one MP3's text metadata.** Provide an exact before/after preview and explicit submit for supported MP3 text fields, including `TXXX:PERSONAL_GENRE`; use confined paths, sibling temporary writes, reopen verification, atomic replacement, and clear unsupported-format failures.
+4. **Move one approved Pending MP3 into Main.** Show and separately confirm the exact source, destination, final filename, and collision result after an approved edit; block collisions and update the catalog only after a verified move.
+
+Exit criteria:
+
+- An explicit scan persists a disposable four-root fixture without source-byte changes, remains idempotent, and reports failures independently.
+- Catalog and Sessions are browsable through separate API contracts and Sessions never enters ordinary catalog queries.
+- A single MP3 text edit preserves unknown tags and leaves the source unchanged on any validation, verification, confinement, or replacement failure.
+- A Pending MP3 move requires separate exact confirmation, blocks collisions without suffixes, and never moves Main or Remember files.
+
+Rollback boundary: each unit rolls back its migration, API/Web changes, and disposable-fixture tests; source media remains untouched except for the explicitly confirmed, verified MP3 write or Pending move.
+
+The original Phase 2 Work Units 5-7 and Phases 3-9 remain later roadmap scope. Their automation and feature requirements are not prerequisites for Phase 2A and must not be described as the next immediate work.
 
 ### Phase 3: Playback
 
