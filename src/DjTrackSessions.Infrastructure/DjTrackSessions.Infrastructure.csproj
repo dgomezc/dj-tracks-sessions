@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DjTracksSessions.Contracts\DjTracksSessions.Contracts.csproj" />
     <ProjectReference Include="..\DjTrackSessions.Domain\DjTrackSessions.Domain.csproj" />
   </ItemGroup>
 </Project>
