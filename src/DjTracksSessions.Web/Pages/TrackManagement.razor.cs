@@ -7,6 +7,7 @@ namespace DjTracksSessions.Web.Pages;
 public partial class TrackManagement
 {
     [Inject] private FilesystemLibraryClient LibraryClient { get; set; } = default!;
+    [Inject] private PlaybackService Playback { get; set; } = default!;
     private static readonly LibraryRoot[] Roots = [LibraryRoot.Main, LibraryRoot.Pending, LibraryRoot.Remember];
     private LibraryRoot SelectedRoot = LibraryRoot.Main;
     private string SelectedPath = string.Empty;
@@ -46,6 +47,8 @@ public partial class TrackManagement
 
     private Task SelectDirectoryAsync(string path) => LoadDirectoryAsync(path, select: true);
     private void SelectAudio(FilesystemAudioItem audio) => SelectedAudio = audio;
+    private void Play(FilesystemAudioItem audio) => Playback.Add(SelectedRoot, audio, true);
+    private void Queue(FilesystemAudioItem audio) => Playback.Add(SelectedRoot, audio);
 
     private bool MatchesFilters(FilesystemAudioItem track)
     {

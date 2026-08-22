@@ -21,4 +21,8 @@
     <main class="shell-main">
         @Body
     </main>
+    <div class="persistent-player" aria-label="Reproductor persistente">
+        <PlayerSurface />
+    </div>
+    <audio @ref="audio" preload="metadata" aria-label="Audio del reproductor global"></audio>
 </div>

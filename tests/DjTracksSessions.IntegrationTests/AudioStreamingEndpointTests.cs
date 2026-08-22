@@ -50,6 +50,17 @@ public sealed class AudioStreamingEndpointTests : IClassFixture<AudioStreamingEn
     }
 
     [Fact]
+    public async Task Streams_aiff_with_browser_compatible_content_type()
+    {
+        _factory.Write("main", "track.aiff", [1, 2, 3]);
+
+        var response = await _client.GetAsync("/playback/stream?root=Main&path=track.aiff");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("audio/x-aiff", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
     public async Task Rejects_invalid_range()
     {
         _factory.Write("remember", "track.flac", [1, 2, 3, 4]);

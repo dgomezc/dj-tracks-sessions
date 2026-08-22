@@ -17,15 +17,33 @@ public sealed class WebShellSmokeTests
         Assert.Contains("Inicio", html);
         Assert.Contains("Biblioteca", html);
         Assert.Contains("Configuración", html);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(html, "<audio\\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase));
         Assert.Contains("href=\"/\"", html);
         Assert.Contains("href=\"/catalogo\"", html);
         Assert.Contains("href=\"/configuracion\"", html);
+        Assert.DoesNotContain("href=\"/reproductor\"", html);
+        Assert.Contains("persistent-player", html);
         Assert.DoesNotContain("BbSidebar", html);
         Assert.DoesNotContain("href=\"/#reproductor\"", html);
         Assert.DoesNotContain("href=\"/#analizador\"", html);
         Assert.DoesNotContain("href=\"/#sesiones\"", html);
         Assert.Contains("Cambiar tema", html);
         Assert.Contains("blazorblueprint.css", html);
+    }
+
+    [Fact]
+    public async Task Player_page_does_not_exist_and_navigation_keeps_the_persistent_surface()
+    {
+        using var factory = new WebShellFactory();
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/reproductor");
+        var html = await client.GetStringAsync("/catalogo");
+
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Contains("persistent-player", html);
+        var trackManagementMarkup = Path.Combine(AppContext.BaseDirectory, "../../../../../src/DjTracksSessions.Web/Pages/TrackManagement.razor");
+        Assert.Contains("aria-label=\"Reproducir", await File.ReadAllTextAsync(trackManagementMarkup));
     }
 
     [Fact]

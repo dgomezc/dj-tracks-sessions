@@ -16,7 +16,7 @@ public static class AudioStreamingEndpoint
             [".flac"] = "audio/flac",
             [".m4a"] = "audio/mp4",
             [".aac"] = "audio/aac",
-            [".aiff"] = "audio/aiff",
+            [".aiff"] = "audio/x-aiff",
             [".wav"] = "audio/wav"
         };
 

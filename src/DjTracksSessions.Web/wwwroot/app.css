@@ -126,6 +126,7 @@ select:focus-visible {
 
 .shell-main {
     min-height: calc(100vh - 4.75rem);
+    padding-bottom: 11rem;
 }
 
 h1,
@@ -460,6 +461,28 @@ p {
 .modal-backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 1rem; background: rgb(8 8 10 / 0.78); backdrop-filter: blur(5px); }
 .modal-panel { width: min(40rem, 100%); max-height: 90vh; overflow: auto; padding: 1.5rem; border: 1px solid var(--border-strong); border-radius: var(--radius-lg); background: var(--popover); color: var(--popover-foreground); }
 .modal-panel h3 { margin: 0.35rem 0 1.25rem; font-family: var(--font-display); }
+.persistent-player { position: fixed; right: 0; bottom: 0; left: 0; z-index: 20; border-top: 1px solid var(--border-strong); box-shadow: 0 -0.5rem 1.5rem rgb(0 0 0 / 0.12); }
+.player-surface { display: grid; gap: 0.7rem; max-height: 10rem; overflow: auto; padding: 0.85rem 2rem; background: var(--surface-lowest); }
+.player-heading, .player-controls, .queue-header { display: flex; align-items: center; gap: 0.8rem; }
+.player-heading h2 { margin: 0; font-family: var(--font-display); font-size: 1rem; }
+.player-heading .eyebrow { margin: 0; }
+.player-status { color: var(--primary); font-family: var(--font-data); font-size: 0.7rem; text-transform: uppercase; }
+.player-empty, .queue-empty, .player-state { color: var(--muted-foreground); font-size: 0.78rem; }
+.player-track { display: grid; gap: 0.15rem; }
+.player-track span { color: var(--muted-foreground); font-size: 0.75rem; }
+.player-controls button, .queue-header button, .queue-panel button { min-height: 2rem; padding: 0.35rem 0.65rem; border: 1px solid var(--border); background: var(--surface-container); color: var(--foreground); cursor: pointer; }
+.player-controls .player-primary { border-color: var(--primary); background: var(--primary); color: var(--primary-foreground); }
+.player-controls label { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--muted-foreground); font-size: 0.7rem; }
+.seek-control { flex: 1; }
+.seek-control input { width: 100%; }
+.queue-panel { display: grid; gap: 0.3rem; border-top: 1px solid var(--border); padding-top: 0.55rem; }
+.queue-header { justify-content: space-between; }
+.queue-panel ol { display: flex; gap: 0.5rem; overflow-x: auto; margin: 0; padding: 0; list-style-position: inside; }
+.queue-panel li { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.45rem; border: 1px solid var(--border); white-space: nowrap; }
+.queue-panel .queue-current { border-color: var(--primary); color: var(--primary); }
+.player-state-error { color: var(--destructive); }
+.track-actions { white-space: nowrap; }
+.track-actions button { min-height: 2rem; padding: 0.3rem 0.55rem; border: 1px solid var(--border); background: var(--surface-container); color: var(--foreground); cursor: pointer; }
 .edit-form { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .preview-box { margin: 1rem 0; padding: 0.85rem; border-left: 3px solid var(--primary); background: color-mix(in oklab, var(--primary) 10%, var(--surface-low)); font-size: 0.8rem; }
 .preview-box p { margin: 0.35rem 0; }

@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddBlazorBlueprintComponents();
+builder.Services.AddScoped<PlaybackService>();
 var apiBaseUrl = builder.Configuration["Api:BaseUrl"]
     ?? throw new InvalidOperationException("Api:BaseUrl must be configured.");
 builder.Services.AddHttpClient<DatabaseConnectionDiagnosticClient>(client =>
