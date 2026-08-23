@@ -1,0 +1,10 @@
+.configuration-page { display: grid; gap: 2rem; max-width: 52rem; padding: 2rem; }
+.configuration-header { padding-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
+.configuration-header h2 { margin: .35rem 0 .75rem; font-family: var(--font-display); font-size: 2rem; letter-spacing: -.045em; }
+.configuration-header p:not(.eyebrow), .connection-description { margin-bottom: 0; color: var(--muted-foreground); line-height: 1.55; }
+.connection-card { display: grid; gap: 1.25rem; padding: 1.5rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--card); }
+.connection-card-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; } .connection-card-heading h3 { margin: .3rem 0 0; font-family: var(--font-display); font-size: 1.3rem; }
+.connection-status { display: inline-flex; align-items: center; align-self: flex-start; flex: 0 0 auto; padding: .3rem .55rem; border: 1px solid currentcolor; border-radius: 999px; font-family: var(--font-data); font-size: .7rem; font-weight: 650; }
+.connection-status-idle { color: var(--muted-foreground); } .connection-status-checking { color: var(--accent); } .connection-status-connected { color: var(--primary); } .connection-status-unavailable { color: var(--destructive); }
+.connection-check-button { min-height: 2.5rem; padding: .6rem .9rem; border: 1px solid var(--primary); border-radius: var(--radius); background: var(--primary); color: var(--primary-foreground); font-weight: 700; cursor: pointer; }
+.connection-check-button:hover:not(:disabled) { filter: brightness(1.07); } .connection-check-button:disabled { cursor: wait; opacity: .6; }

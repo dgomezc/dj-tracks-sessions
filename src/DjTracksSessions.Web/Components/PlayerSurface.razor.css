@@ -1,0 +1,18 @@
+.player-surface { display: grid; gap: .7rem; max-height: 10rem; overflow: auto; padding: .85rem 2rem; background: var(--surface-lowest); }
+.player-heading, .player-controls, .queue-header { display: flex; align-items: center; gap: .8rem; }
+.player-heading h2 { margin: 0; font-family: var(--font-display); font-size: 1rem; }
+.player-heading .eyebrow { margin: 0; }
+.player-status { color: var(--primary); font-family: var(--font-data); font-size: .7rem; text-transform: uppercase; }
+.player-empty, .queue-empty, .player-state { color: var(--muted-foreground); font-size: .78rem; }
+.player-track { display: grid; gap: .15rem; }
+.player-track span { color: var(--muted-foreground); font-size: .75rem; }
+.player-controls button, .queue-header button, .queue-panel button { min-height: 2rem; padding: .35rem .65rem; border: 1px solid var(--border); background: var(--surface-container); color: var(--foreground); cursor: pointer; }
+.player-controls .player-primary { border-color: var(--primary); background: var(--primary); color: var(--primary-foreground); }
+.player-controls label { display: inline-flex; align-items: center; gap: .4rem; color: var(--muted-foreground); font-size: .7rem; }
+.seek-control { flex: 1; } .seek-control input { width: 100%; }
+.queue-panel { display: grid; gap: .3rem; border-top: 1px solid var(--border); padding-top: .55rem; }
+.queue-header { justify-content: space-between; }
+.queue-panel ol { display: flex; gap: .5rem; overflow-x: auto; margin: 0; padding: 0; list-style-position: inside; }
+.queue-panel li { display: inline-flex; align-items: center; gap: .5rem; padding: .25rem .45rem; border: 1px solid var(--border); white-space: nowrap; }
+.queue-panel .queue-current { border-color: var(--primary); color: var(--primary); }
+.player-state-error { color: var(--destructive); }
