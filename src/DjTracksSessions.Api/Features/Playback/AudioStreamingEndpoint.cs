@@ -26,7 +26,7 @@ public static class AudioStreamingEndpoint
         {
             if (!Enum.TryParse<LibraryRoot>(root, ignoreCase: true, out var requestedRoot))
             {
-                return ApiProblemDetails.FromError(Failure("playback.root_invalid", "A Main, Pending, or Remember root is required."));
+                return ApiProblemDetails.FromError(Failure("playback.root_invalid", "A Main, Pending, Remember, or Sessions root is required."));
             }
 
             if (string.IsNullOrWhiteSpace(path) || Path.IsPathFullyQualified(path))
@@ -34,7 +34,9 @@ public static class AudioStreamingEndpoint
                 return ApiProblemDetails.FromError(Failure("path.outside_root", "Only a relative path is accepted."));
             }
 
-            var policies = LibraryRootConfiguration.LoadTrackManagement(configuration);
+            var policies = requestedRoot == LibraryRoot.Sessions
+                ? LibraryRootConfiguration.Load(configuration)
+                : LibraryRootConfiguration.LoadTrackManagement(configuration);
             if (policies.IsFailed)
             {
                 return ApiProblemDetails.FromResult(Result.Fail<string>(policies.Errors), _ => Results.Empty);
@@ -87,7 +89,8 @@ public static class AudioStreamingEndpoint
         LibraryRootType.Main => LibraryRoot.Main,
         LibraryRootType.Pending => LibraryRoot.Pending,
         LibraryRootType.Remember => LibraryRoot.Remember,
-        _ => throw new InvalidOperationException("Sessions is not a Track Management root.")
+        LibraryRootType.Sessions => LibraryRoot.Sessions,
+        _ => throw new InvalidOperationException("Unknown library root.")
     };
 
     private static Error Failure(string code, string message) =>

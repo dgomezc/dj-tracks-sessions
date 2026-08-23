@@ -14,6 +14,8 @@ builder.Services.AddHttpClient<DatabaseConnectionDiagnosticClient>(client =>
     client.BaseAddress = new Uri(apiBaseUrl, UriKind.Absolute));
 builder.Services.AddHttpClient<FilesystemLibraryClient>(client =>
     client.BaseAddress = new Uri(apiBaseUrl, UriKind.Absolute));
+builder.Services.AddHttpClient<SessionsClient>(client =>
+    client.BaseAddress = new Uri(apiBaseUrl, UriKind.Absolute));
 
 var app = builder.Build();
 

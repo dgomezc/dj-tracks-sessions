@@ -28,7 +28,12 @@ public sealed class PlaybackService
     public event Action<AudioCommand>? AudioCommandRequested;
     public void Add(LibraryRoot root, FilesystemAudioItem track, bool play = false)
     {
-        var item = new PlaybackTrack(new TrackIdentity(root, track.RelativePath), track.Title ?? track.FileName, track.Artists.Count == 0 ? "Artista desconocido" : string.Join(", ", track.Artists), track.FileName);
+        Add(new PlaybackTrack(new TrackIdentity(root, track.RelativePath), track.Title ?? track.FileName, track.Artists.Count == 0 ? "Artista desconocido" : string.Join(", ", track.Artists), track.FileName), play);
+    }
+    public void Add(SessionAudioItem session, bool play = false) =>
+        Add(new PlaybackTrack(new TrackIdentity(LibraryRoot.Sessions, session.RelativePath), session.Title ?? session.FileName, "Sesión", session.FileName), play);
+    private void Add(PlaybackTrack item, bool play)
+    {
         Queue.Add(item);
         if (play) Play(item); else Changed?.Invoke();
     }

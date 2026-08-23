@@ -888,6 +888,52 @@ p {
     color: var(--foreground);
 }
 
+.sessions-page { display: grid; min-height: calc(100vh - 4.75rem); background: var(--surface); }
+.sessions-page-header { display: flex; align-items: center; justify-content: space-between; gap: 2rem; min-height: 6.5rem; padding: 1.15rem 2rem; border-bottom: 1px solid var(--border); background: var(--surface-lowest); }
+.sessions-page-header h1 { margin: 0.35rem 0 0.3rem; font-family: var(--font-display); font-size: 1.75rem; letter-spacing: -0.045em; }
+.sessions-page-header p:not(.eyebrow) { margin: 0; color: var(--muted-foreground); }
+.sessions-workspace { display: grid; grid-template-columns: 15rem minmax(0, 1fr); }
+.sessions-sidebar { display: grid; gap: 0.3rem; min-height: calc(100vh - 11.25rem); padding: 1.25rem 1rem; border-right: 1px solid var(--border); background: var(--surface-low); }
+.sessions-sidebar .panel-label { margin: 0 0 0.7rem 0.5rem; }
+.sessions-content { min-width: 0; }
+.session-list { display: grid; gap: 0.7rem; padding: 1.25rem 2rem; }
+.session-card { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) auto; gap: 1rem; align-items: center; padding: 1rem; border: 1px solid var(--border); background: var(--surface-low); }
+.session-card-selected { border-color: var(--primary); }
+.session-card-select { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) auto; gap: 1rem; align-items: center; width: 100%; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
+.session-card-select span:nth-child(2) { display: grid; gap: .3rem; }
+.session-card-select small { color: var(--muted-foreground); font-family: var(--font-data); font-size: .68rem; overflow-wrap: anywhere; }
+.session-detail { display: grid; gap: 1.25rem; margin: 1rem; padding: 1.25rem; border: 1px solid var(--border); background: var(--card); }
+.session-detail h2 { margin: .25rem 0; font-family: var(--font-display); }
+.session-detail .detail-header { display: flex; justify-content: space-between; gap: 1rem; }
+.session-detail .detail-header p:last-child { margin: 0; color: var(--muted-foreground); font-family: var(--font-data); font-size: .7rem; }
+.session-edit-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.session-edit-form label { display: grid; gap: .35rem; color: var(--muted-foreground); font-size: .75rem; }
+.session-edit-form input { min-height: 2.25rem; padding: 0 .6rem; border: 1px solid var(--border); background: var(--surface-low); color: var(--foreground); }
+.primary-action { width: fit-content; min-height: 2.3rem; padding: 0 .8rem; border: 1px solid var(--primary); background: var(--primary); color: var(--primary-foreground); cursor: pointer; }
+.edit-preview { padding: 1rem; border-left: 3px solid var(--primary); background: var(--surface-low); }
+.edit-preview h3 { margin-top: 0; }
+.session-tracklist { display: grid; gap: .6rem; padding: 1rem; border: 1px solid var(--border); background: var(--surface-low); }
+.session-tracklist h3 { margin: .2rem 0 0; font-family: var(--font-display); }
+.session-tracklist .panel-label, .session-tracklist p { margin: 0; }
+.tracklist-source, .tracklist-empty { color: var(--muted-foreground); font-family: var(--font-data); font-size: .72rem; }
+.session-tracklist pre { max-height: 18rem; margin: 0; padding: .8rem; overflow: auto; border: 1px solid var(--border); background: var(--surface-lowest); color: var(--foreground); font: .78rem/1.5 var(--font-data); white-space: pre-wrap; }
+.session-card-index { display: grid; width: 2.2rem; height: 2.2rem; place-items: center; border: 1px solid var(--border); color: var(--primary); font-size: 1.1rem; }
+.session-card h2 { margin: 0 0 0.3rem; font-family: var(--font-display); font-size: 1.05rem; }
+.session-card p { margin: 0; color: var(--muted-foreground); font-family: var(--font-data); font-size: 0.68rem; overflow-wrap: anywhere; }
+.session-card dl { display: flex; gap: 1.5rem; margin: 0; }
+.session-card dl div { display: grid; gap: 0.25rem; min-width: 4rem; }
+.session-card dt { color: var(--muted-foreground); font-family: var(--font-data); font-size: 0.62rem; text-transform: uppercase; }
+.session-card dd { margin: 0; color: var(--foreground); font-family: var(--font-data); }
+.sessions-player { display: grid; gap: 0.8rem; margin: 1rem 2rem 2rem; padding: 1rem; border: 1px solid var(--border-strong); background: var(--surface-lowest); }
+.sessions-player audio { display: none; }
+.sessions-player h2 { margin: 0.25rem 0 0; font-family: var(--font-display); font-size: 1.2rem; }
+.sessions-player .player-track { display: grid; gap: 0.25rem; }
+.sessions-player .player-track span, .sessions-player .player-empty { color: var(--muted-foreground); font-family: var(--font-data); font-size: 0.72rem; }
+.sessions-player .player-controls { display: flex; align-items: center; gap: 0.5rem; }
+.sessions-player button { min-height: 2.2rem; padding: 0 0.8rem; border: 1px solid var(--border-strong); background: var(--surface-low); color: var(--foreground); cursor: pointer; }
+.sessions-player .player-primary { border-color: var(--primary); background: var(--primary); color: var(--primary-foreground); }
+.sessions-player .player-status { color: var(--muted-foreground); font-family: var(--font-data); font-size: 0.68rem; }
+
 @media (max-width: 900px) {
     .catalog-toolbar,
     .catalog-toolbar > div {

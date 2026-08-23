@@ -88,4 +88,21 @@ public sealed class PlaybackQueueTests
         Assert.Equal(PlaybackStatus.Error, service.Status);
         Assert.Equal("El navegador no pudo reproducir este audio.", service.ErrorMessage);
     }
+
+    [Fact]
+    public void Session_audio_is_mapped_to_the_global_playback_identity_and_stream()
+    {
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Api:BaseUrl"] = "http://api.example.test/base/"
+        }).Build();
+        var service = new PlaybackService(configuration);
+        AudioCommand? command = null;
+        service.AudioCommandRequested += requested => command = requested;
+
+        service.Add(new SessionAudioItem("2026/Set & One.mp3", "Set & One.mp3", ".mp3", "Session", null, null, null, null), true);
+
+        Assert.Equal(new TrackIdentity(LibraryRoot.Sessions, "2026/Set & One.mp3"), service.Queue.Current?.Identity);
+        Assert.Equal("http://api.example.test/base/playback/stream?root=Sessions&path=2026%2FSet%20%26%20One.mp3", command?.StreamUrl);
+    }
 }

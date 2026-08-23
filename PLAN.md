@@ -362,7 +362,7 @@ Comparison shows and allows playback of both files, with path, format, bitrate, 
 
 ## 14. Sessions
 
-Sessions have their own routes, queries, explorer, search, and player. Do not reuse the global track queue.
+Sessions have their own routes, queries, explorer, and search. Playback uses the shell-mounted global player through a distinct Sessions identity and stream boundary.
 
 Requirements:
 
@@ -498,7 +498,7 @@ The original Phase 2 Work Units 5-7 and all screens after Track Management remai
 
 1. **Track Management screen.** Complete Phase 2A Work Units 2-4: read-only scan/browse/detail UI, one-MP3 safe edit, and one separately confirmed Pending move. Do not start Player or Sessions UI before its exit criteria pass.
 2. **Player screen.** Complete the catalog Player UI and its supporting Range/API, shared playback service, queue, visible states, and tests. It provides one shell-mounted Player surface, not a contextual mini-player. Sessions remains outside the player and its queue. Waveforms, persisted playback, shuffle/repeat, mini-player integration, and shortcuts are deferred unless explicitly added to this screen's approved work units.
-3. **Sessions screen.** Complete isolated Sessions queries, explorer/detail, its own player, read-only tracklist resolution, visible ambiguity/error states, and tests. Sessions must never enter track search, the global queue, playlists, duplicate detection, providers, or automatic analysis.
+3. **Sessions screen.** Complete isolated Sessions queries, explorer/detail, global-player integration, read-only tracklist resolution, visible ambiguity/error states, and tests. Sessions must never enter track search, catalog semantics, playlists, duplicate detection, providers, or automatic analysis.
 4. **Remaining screens.** Only after the first three screens close, sequence Analyzer/Tagger, playlists, duplicates, advanced metadata/history/deletion, and operational screens as independent vertical work units.
 
 ### Phase 3: Player Screen
@@ -529,12 +529,12 @@ Work units:
 
 1. Session queries and year/folder explorer.
 2. Session detail and supported manual metadata editing.
-3. Separate player with no persisted position.
+3. Global player integration with no persisted position.
 4. Tracklist resolution, ambiguity state, and read-only display.
 
 Exit criteria:
 
-- Sessions do not appear in track searches, global queue, playlists, or duplicate jobs.
+- Sessions do not appear in track searches, catalog playlists, or duplicate jobs; their playback identity remains a separate Sessions root.
 - No automatic provider analysis is available for Sessions.
 - Matching TXT displays while the session plays and remains unchanged.
 

@@ -17,6 +17,7 @@ public sealed class WebShellSmokeTests
         Assert.Contains("Inicio", html);
         Assert.Contains("Biblioteca", html);
         Assert.Contains("Configuración", html);
+        Assert.Contains("Sesiones", html);
         Assert.Single(System.Text.RegularExpressions.Regex.Matches(html, "<audio\\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase));
         Assert.Contains("href=\"/\"", html);
         Assert.Contains("href=\"/catalogo\"", html);
@@ -29,6 +30,24 @@ public sealed class WebShellSmokeTests
         Assert.DoesNotContain("href=\"/#sesiones\"", html);
         Assert.Contains("Cambiar tema", html);
         Assert.Contains("blazorblueprint.css", html);
+    }
+
+    [Fact]
+    public async Task Sessions_page_exposes_the_separate_explorer_boundary()
+    {
+        using var factory = new WebShellFactory();
+        using var client = factory.CreateClient();
+
+        var html = await client.GetStringAsync("/sesiones");
+
+        Assert.Contains("Colección independiente", html);
+        Assert.Contains("Exploración directa de mixes personales", html);
+        Assert.Contains("Sin catálogo ni cola global", html);
+        Assert.Contains("Sesiones", html);
+        Assert.Contains("sessions-player", html);
+        Assert.Contains("Lista de reproducción", html);
+        Assert.Contains("No se encontró un tracklist asociado.", html);
+        Assert.Equal(2, System.Text.RegularExpressions.Regex.Matches(html, "<audio\\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase).Count);
     }
 
     [Fact]

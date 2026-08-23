@@ -47,7 +47,7 @@ This file records settled decisions. Change them only with explicit product appr
 - Pending files are detected automatically but analyzed only when requested.
 - Approved pending files may be tagged, renamed, and moved only after movement confirmation.
 - Remember tracks may be analyzed and edited but never moved; `PersonalGenre` is always `Remember`.
-- Sessions are separate, manually edited, never automatically analyzed, and remain outside track playlists and the global player.
+- Sessions are separate, manually edited, never automatically analyzed, and remain outside Track Management semantics and playlists. They play through the single global player using a Sessions-root identity and confined stream path.
 - Only audio files and session TXT tracklists are managed.
 
 ## Metadata
@@ -85,7 +85,7 @@ This file records settled decisions. Change them only with explicit product appr
 - Queue, current track, and position survive restarts and restore paused.
 - Smart and manual playlists are supported.
 - M3U8 exports support configurable NAS-to-Windows path mapping for AIMP and Traktor.
-- Sessions use their own player and do not need playback-position persistence.
+- Sessions use the single global player and do not need playback-position persistence.
 
 ## Safety
 

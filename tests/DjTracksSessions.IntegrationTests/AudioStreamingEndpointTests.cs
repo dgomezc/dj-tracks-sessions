@@ -75,7 +75,7 @@ public sealed class AudioStreamingEndpointTests : IClassFixture<AudioStreamingEn
     [Theory]
     [InlineData("Main", "missing.mp3", "path.not_found")]
     [InlineData("Main", "../outside.mp3", "path.outside_root")]
-    [InlineData("Sessions", "session.mp3", "playback.root_invalid")]
+    [InlineData("Sessions", "session.mp3", "path.not_found")]
     [InlineData("Main", "notes.txt", "audio.unsupported_format")]
     [InlineData("Main", "/tmp/track.mp3", "path.outside_root")]
     public async Task Rejects_invalid_stream_requests(string root, string path, string errorCode)
@@ -86,6 +86,32 @@ public sealed class AudioStreamingEndpointTests : IClassFixture<AudioStreamingEn
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         Assert.Equal(errorCode, document.RootElement.GetProperty("errorCode").GetString());
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task Sessions_stream_is_confined_and_supports_ranges_without_becoming_catalog_playback()
+    {
+        var bytes = Enumerable.Range(0, 16).Select(value => (byte)value).ToArray();
+        _factory.Write("sessions", "2026/session.mp3", bytes);
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/playback/stream?root=Sessions&path=2026%2Fsession.mp3");
+        request.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(2, 5);
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.PartialContent, response.StatusCode);
+        Assert.Equal("audio/mpeg", response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(bytes[2..6], await response.Content.ReadAsByteArrayAsync());
+    }
+
+    [Theory]
+    [InlineData("../outside.mp3", "path.outside_root")]
+    [InlineData("2026/notes.txt", "audio.unsupported_format")]
+    public async Task Sessions_playback_rejects_paths_outside_the_sessions_audio_boundary(string path, string errorCode)
+    {
+        var response = await _client.GetAsync($"/playback/stream?root=Sessions&path={Uri.EscapeDataString(path)}");
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal(errorCode, document.RootElement.GetProperty("errorCode").GetString());
     }
 
     [Fact]
@@ -124,8 +150,12 @@ public sealed class AudioStreamingEndpointTests : IClassFixture<AudioStreamingEn
             }));
         }
 
-        public void Write(string root, string path, byte[] bytes) =>
-            File.WriteAllBytes(Path.Combine(Root, root, path), bytes);
+        public void Write(string root, string path, byte[] bytes)
+        {
+            var fullPath = Path.Combine(Root, root, path);
+            Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+            File.WriteAllBytes(fullPath, bytes);
+        }
 
         protected override void Dispose(bool disposing)
         {

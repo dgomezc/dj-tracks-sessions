@@ -5,6 +5,8 @@ using DjTracksSessions.Api.Features.Library.Metadata;
 using DjTracksSessions.Api.Features.Library.Pending;
 using DjTracksSessions.Api.Features.Library.Browse;
 using DjTracksSessions.Api.Features.Playback;
+using DjTracksSessions.Api.Features.Sessions.Browse;
+using DjTracksSessions.Api.Features.Sessions.Metadata;
 using DjTracksSessions.Contracts;
 using DjTrackSessions.Infrastructure;
 using FluentResults;
@@ -61,6 +63,8 @@ app.MapTrackMetadata();
 app.MapPendingMove();
 app.MapFilesystemBrowse();
 app.MapAudioStreaming();
+app.MapSessionBrowse();
+app.MapSessionMetadata();
 
 app.MapGet("/examples/{id}", (int id) =>
 {

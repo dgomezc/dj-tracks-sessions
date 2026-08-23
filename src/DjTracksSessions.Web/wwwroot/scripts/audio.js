@@ -16,6 +16,7 @@ window.djTracksSessionsAudio = {
                 await audio.play();
             } else if (kind === 'Play') await audio.play();
             else if (kind === 'Pause') audio.pause();
+            else if (kind === 'Stop') { audio.pause(); audio.removeAttribute('src'); audio.load(); }
             else if (kind === 'Seek') audio.currentTime = value;
             else if (kind === 'Volume') audio.volume = value;
         } catch (error) {

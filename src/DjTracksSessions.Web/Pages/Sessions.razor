@@ -1,0 +1,59 @@
+@page "/sesiones"
+@using DjTracksSessions.Contracts
+@using DjTracksSessions.Web.Components
+@rendermode InteractiveServer
+
+<section class="sessions-page" aria-labelledby="sessions-title">
+    <header class="sessions-page-header">
+        <div><p class="eyebrow">Colección independiente</p><h1 id="sessions-title">Sesiones</h1><p>Exploración directa de mixes personales por año y carpeta.</p></div>
+        <span class="catalog-status" role="status"><i aria-hidden="true"></i>@StatusLabel</span>
+    </header>
+    <div class="sessions-workspace">
+        <aside class="sessions-sidebar" aria-label="Carpetas de sesiones">
+            <p class="panel-label">Años y carpetas</p>
+            <button class="tree-item root-folder @(SelectedPath == string.Empty ? "tree-item-active" : "")" type="button" @onclick="() => SelectDirectoryAsync(string.Empty)">⌂ Raíz</button>
+            @foreach (var folder in VisibleFolders)
+            {
+                <div class="tree-row" style="--tree-depth: @folder.Depth"><button class="tree-toggle" type="button" aria-label="@(folder.IsExpanded ? "Contraer" : "Expandir") @folder.Directory.Name" aria-expanded="@folder.IsExpanded" @onclick="() => ToggleDirectoryAsync(folder.Directory.RelativePath)">@(folder.IsExpanded ? "⌄" : "›")</button><button class="tree-item @(SelectedPath == folder.Directory.RelativePath ? "tree-item-active" : "")" type="button" @onclick="() => SelectDirectoryAsync(folder.Directory.RelativePath)">@folder.Directory.Name</button></div>
+            }
+            <div class="catalog-sync"><span>FS.READY <b aria-hidden="true"></b></span><small>API / filesystem</small></div>
+        </aside>
+        <main class="sessions-content">
+            <div class="catalog-toolbar"><div><span class="breadcrumb">Sesiones / @(string.IsNullOrEmpty(SelectedPath) ? "raíz" : SelectedPath)</span><strong>@(Browse?.AudioFiles.Count ?? 0) <small>audios</small></strong></div><span class="toolbar-note">Colección independiente · reproductor global</span></div>
+            @if (ErrorMessage is not null) { <div class="state-panel state-error" role="alert"><strong>No se pudo abrir la carpeta</strong><span>@ErrorMessage</span></div> }
+            else if (IsBusy) { <div class="state-panel"><strong>Cargando sesiones...</strong><span>Consultando la API y el filesystem confinado.</span></div> }
+            else if (Browse is null || Browse.AudioFiles.Count == 0) { <div class="state-panel"><strong>Esta carpeta no contiene sesiones de audio</strong><span>Elegí otro año o carpeta.</span></div> }
+            else { <div class="session-list">@foreach (var audio in Browse.AudioFiles) { <article class="session-card @(SelectedAudio?.RelativePath == audio.RelativePath ? "session-card-selected" : "")"><button class="session-card-select" type="button" @onclick="() => SelectAudioAsync(audio)"><span class="session-card-index" aria-hidden="true">♪</span><span><strong>@(audio.Title ?? audio.FileName)</strong><small>@audio.FileName</small></span><dl><span><dt>Año</dt><dd>@(audio.Year?.ToString() ?? "—")</dd></span><span><dt>Duración</dt><dd>@FormatDuration(audio.Duration)</dd></span></dl></button><button class="primary-action session-play-action" type="button" aria-label="Reproducir @(audio.Title ?? audio.FileName)" @onclick="() => PlayAudio(audio)">Reproducir</button></article> }</div> }
+            @if (SelectedDetail is not null)
+            {
+                <section class="session-detail" aria-labelledby="session-detail-title">
+                    <div class="detail-header"><div><p class="panel-label">Detalle de sesión</p><h2 id="session-detail-title">@(SelectedDetail.Title ?? SelectedDetail.FileName)</h2><p>@SelectedDetail.Identity.RelativePath</p></div><span class="track-state">MP3 editable</span></div>
+                    <dl class="detail-metrics"><span><b>@FormatDuration(SelectedDetail.Duration)</b><small>DURACIÓN</small></span><span><b>@(SelectedDetail.Year?.ToString() ?? "—")</b><small>AÑO</small></span><span><b>@(SelectedDetail.InitialKey ?? "—")</b><small>CLAVE</small></span></dl>
+                    <section class="session-tracklist" aria-labelledby="tracklist-title">
+                        <div><p class="panel-label">Tracklist</p><h3 id="tracklist-title">Lista de reproducción de la sesión (solo lectura)</h3></div>
+                        @if (SelectedDetail.Tracklist is { Status: "resolved" } tracklist)
+                        {
+                            <p class="tracklist-source">Fuente: @tracklist.SourceRelativePath</p><pre>@tracklist.Text</pre>
+                        }
+                        else if (SelectedDetail.Tracklist is { Status: "ambiguous" } ambiguous)
+                        {
+                            <p class="state-error" role="alert">La lista genérica es ambigua para @ambiguous.CandidateAudioPaths.Count audios. Asocie una lista con el nombre exacto del audio.</p>
+                        }
+                        else if (SelectedDetail.Tracklist is { Status: "invalid" or "unreadable" })
+                        {
+                            <p class="state-error" role="alert">La lista existe, pero no se puede leer como texto UTF-8 válido.</p>
+                        }
+                        else { <p class="tracklist-empty">No se encontró un tracklist asociado.</p> }
+                    </section>
+                    <form class="session-edit-form" @onsubmit="PreviewEditAsync" @onsubmit:preventDefault="true">
+                        <label>Título<input @bind="EditTitle" /></label><label>Artistas<input @bind="EditArtists" /></label><label>Álbum<input @bind="EditAlbum" /></label><label>Año<input type="number" @bind="EditYear" /></label><label>Género<input @bind="EditGenre" /></label>
+                        <button class="primary-action" type="submit">Previsualizar cambios</button>
+                    </form>
+                    @if (EditError is not null) { <p class="state-error" role="alert">@EditError</p> }
+                    @if (EditPreview is not null) { <div class="edit-preview"><h3>Antes / después</h3><p><strong>Antes:</strong> @EditPreview.Before.Title · @string.Join(", ", EditPreview.Before.Artists) · @EditPreview.Before.Year</p><p><strong>Después:</strong> @EditPreview.After.Title · @string.Join(", ", EditPreview.After.Artists) · @EditPreview.After.Year</p><button class="primary-action" type="button" @onclick="ApplyEditAsync">Confirmar y guardar</button></div> }
+                </section>
+            }
+            @if (Browse?.Issues.Count > 0) { <section class="failure-list"><h2>Entradas no disponibles</h2>@foreach (var issue in Browse.Issues) { <p><strong>@issue.RelativePath</strong> @issue.ErrorCode: @issue.ErrorMessage</p> }</section> }
+        </main>
+    </div>
+</section>

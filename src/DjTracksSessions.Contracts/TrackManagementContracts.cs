@@ -4,7 +4,8 @@ public enum LibraryRoot
 {
     Main,
     Pending,
-    Remember
+    Remember,
+    Sessions
 }
 
 public sealed record TrackIdentity(LibraryRoot Root, string RelativePath);
