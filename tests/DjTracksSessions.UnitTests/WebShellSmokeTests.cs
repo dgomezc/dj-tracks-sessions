@@ -42,12 +42,14 @@ public sealed class WebShellSmokeTests
 
         Assert.Contains("Colección independiente", html);
         Assert.Contains("Exploración directa de mixes personales", html);
-        Assert.Contains("Sin catálogo ni cola global", html);
+        Assert.Contains("Colección independiente · reproductor global", html);
         Assert.Contains("Sesiones", html);
-        Assert.Contains("sessions-player", html);
-        Assert.Contains("Lista de reproducción", html);
-        Assert.Contains("No se encontró un tracklist asociado.", html);
-        Assert.Equal(2, System.Text.RegularExpressions.Regex.Matches(html, "<audio\\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase).Count);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(html, "<audio\\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase));
+
+        var sessionsMarkup = Path.Combine(AppContext.BaseDirectory, "../../../../../src/DjTracksSessions.Web/Pages/Sessions.razor");
+        var source = await File.ReadAllTextAsync(sessionsMarkup);
+        Assert.Contains("Lista de reproducción", source);
+        Assert.Contains("No se encontró un tracklist asociado.", source);
     }
 
     [Fact]
