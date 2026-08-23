@@ -19,5 +19,9 @@
   },
   "skills": {
     "paths": [".opencode/skills"]
-  }
+  },
+  "instructions": [
+    "AGENTS.md",
+    ".opencode/instructions/blazorblueprint.md"
+  ]
 }

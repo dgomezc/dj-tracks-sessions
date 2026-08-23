@@ -8,10 +8,22 @@
         </NavLink>
 
         <nav class="shell-nav" aria-label="Navegación principal">
-            <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">Inicio</NavLink>
-            <NavLink class="nav-link" href="/catalogo">Biblioteca</NavLink>
-            <NavLink class="nav-link" href="/sesiones">Sesiones</NavLink>
-            <NavLink class="nav-link nav-link-settings" href="/configuracion">Configuración</NavLink>
+            <BbNavigationMenu EnableKeyboardNavigation="true" Class="shell-nav-menu">
+                <BbNavigationMenuList Class="shell-nav-list">
+                    <BbNavigationMenuItem>
+                        <BbNavigationMenuLink Href="/" Match="NavLinkMatch.All" Class="nav-link" ActiveCssClass="active">Inicio</BbNavigationMenuLink>
+                    </BbNavigationMenuItem>
+                    <BbNavigationMenuItem>
+                        <BbNavigationMenuLink Href="/catalogo" Class="nav-link" ActiveCssClass="active">Biblioteca</BbNavigationMenuLink>
+                    </BbNavigationMenuItem>
+                    <BbNavigationMenuItem>
+                        <BbNavigationMenuLink Href="/sesiones" Class="nav-link" ActiveCssClass="active">Sesiones</BbNavigationMenuLink>
+                    </BbNavigationMenuItem>
+                    <BbNavigationMenuItem>
+                        <BbNavigationMenuLink Href="/configuracion" Class="nav-link" ActiveCssClass="active">Configuración</BbNavigationMenuLink>
+                    </BbNavigationMenuItem>
+                </BbNavigationMenuList>
+            </BbNavigationMenu>
         </nav>
 
         <div class="shell-header-actions">

@@ -1,1 +1,1 @@
-button { min-height: 2.25rem; border-color: var(--border); border-radius: var(--radius); background: var(--surface-low); color: var(--foreground); }
+::deep button { min-height: 2.25rem; border-color: var(--border); border-radius: var(--radius); background: var(--surface-low); color: var(--foreground); }
