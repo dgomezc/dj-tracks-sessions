@@ -31,11 +31,14 @@
         </div>
     </header>
 
-    <main class="shell-main">
+        <main class="shell-main @(Playback.Queue.Current is not null ? "shell-main-with-player" : "")">
         @Body
     </main>
-    <div class="persistent-player" aria-label="Reproductor persistente">
-        <PlayerSurface />
-    </div>
+    @if (Playback.Queue.Current is not null)
+    {
+        <div class="persistent-player" aria-label="Reproductor persistente">
+            <PlayerSurface />
+        </div>
+    }
     <audio @ref="audio" preload="metadata" aria-label="Audio del reproductor global"></audio>
 </div>

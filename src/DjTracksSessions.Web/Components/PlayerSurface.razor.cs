@@ -7,10 +7,15 @@ namespace DjTracksSessions.Web.Components;
 public partial class PlayerSurface : IDisposable
 {
     [Inject] protected PlaybackService Service { get; set; } = default!;
+    private bool QueueOpen;
     private string StatusLabel => Service.Status switch { PlaybackStatus.Empty => "Sin pista", PlaybackStatus.Loading => "Cargando", PlaybackStatus.Playing => "Reproduciendo", PlaybackStatus.Paused => "En pausa", PlaybackStatus.Ended => "Finalizada", PlaybackStatus.Unavailable => "No disponible", PlaybackStatus.Error => "Error", _ => "" };
     private bool CanPrevious => Service.Queue.CurrentIndex > 0;
     protected override void OnInitialized() => Service.Changed += Refresh;
-    private void Refresh() => InvokeAsync(StateHasChanged);
+    private void Refresh()
+    {
+        if (Service.Queue.Current is null) QueueOpen = false;
+        InvokeAsync(StateHasChanged);
+    }
     private void Toggle() => Service.TogglePlayPause();
     private void Previous() => Service.Previous();
     private void Next() => Service.Next();

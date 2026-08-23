@@ -1,7 +1,37 @@
 @using DjTracksSessions.Web.Services
-<section id="reproductor" class="player-surface" aria-labelledby="player-title">
-    <div class="player-heading"><p class="eyebrow">Explorer / Player</p><h2 id="player-title">Reproductor</h2><span class="player-status" role="status">@StatusLabel</span></div>
-    @if (Service.Queue.Current is null) { <div class="player-empty">La cola está vacía. Agregá pistas desde Biblioteca o Sesiones.</div> }
-    else { <div class="player-track"><strong>@Service.Queue.Current.Title</strong><span>@Service.Queue.Current.Artist · @Service.Queue.Current.FileName</span></div><div class="player-controls"><button type="button" @onclick="Previous" disabled="@(!CanPrevious)">Anterior</button><button class="player-primary" type="button" @onclick="Toggle">@(Service.IsPlaying ? "Pausa" : "Reproducir")</button><button type="button" @onclick="Next">Siguiente</button><label>Volumen <input type="range" min="0" max="1" step="0.01" value="@Service.Volume" @oninput="VolumeChanged" /></label><label class="seek-control"><span class="sr-only">Posición</span><input type="range" min="0" max="@Service.Duration" step="0.1" value="@Service.Position" @oninput="SeekChanged" /></label></div>@if (Service.Status is PlaybackStatus.Loading) { <p class="player-state">Cargando audio...</p> } @if (Service.Status is PlaybackStatus.Unavailable or PlaybackStatus.Error) { <p class="player-state player-state-error" role="alert">@(Service.ErrorMessage ?? "El audio no está disponible.")</p> } @if (Service.Status is PlaybackStatus.Ended) { <p class="player-state">Pista finalizada. Usá Siguiente para continuar.</p> } }
-    <div class="queue-panel"><div class="queue-header"><strong>Cola actual</strong><button type="button" @onclick="Clear" disabled="@(Service.Queue.Current is null)">Vaciar cola</button></div>@if (Service.Queue.Tracks.Count == 0) { <span class="queue-empty">Sin pistas en cola.</span> } else { <ol>@foreach (var track in Service.Queue.Tracks) { <li class="@(track == Service.Queue.Current ? "queue-current" : "")"><span>@track.Title</span><button type="button" aria-label="Quitar @track.Title" @onclick="() => Remove(track.Identity)">Quitar</button></li>}</ol> }</div>
-</section>
+@if (Service.Queue.Current is not null)
+{
+    <section id="reproductor" class="player-surface" aria-labelledby="player-title">
+        <div class="player-bar">
+            <div class="player-track" aria-live="polite">
+                <p class="player-kicker">Explorer / Player · @StatusLabel</p>
+                <h2 id="player-title">@Service.Queue.Current.Title</h2>
+                <span>@Service.Queue.Current.Artist · @Service.Queue.Current.FileName</span>
+            </div>
+            <div class="player-controls" aria-label="Controles de reproducción">
+                <button class="player-icon-button" type="button" aria-label="Pista anterior" @onclick="Previous" disabled="@(!CanPrevious)">Anterior</button>
+                <button class="player-primary" type="button" aria-label="@(Service.IsPlaying ? "Pausar pista" : "Reproducir pista")" @onclick="Toggle">@(Service.IsPlaying ? "Pausa" : "Reproducir")</button>
+                <button class="player-icon-button" type="button" aria-label="Pista siguiente" @onclick="Next">Siguiente</button>
+            </div>
+            <label class="seek-control"><span class="sr-only">Posición de la pista</span><input aria-label="Posición de la pista" type="range" min="0" max="@Service.Duration" step="0.1" value="@Service.Position" @oninput="SeekChanged" /></label>
+            <label class="volume-control"><span>Volumen</span><input aria-label="Volumen" type="range" min="0" max="1" step="0.01" value="@Service.Volume" @oninput="VolumeChanged" /></label>
+            <BbCollapsible @bind-Open="QueueOpen" Class="queue-toggle">
+                <BbCollapsibleTrigger>
+                    <BbButton Variant="ButtonVariant.Outline" aria-label="@(QueueOpen ? "Cerrar cola" : "Abrir cola")">Cola <span aria-hidden="true">(@Service.Queue.Tracks.Count)</span></BbButton>
+                </BbCollapsibleTrigger>
+                <BbCollapsibleContent Class="queue-content">
+                    <div class="queue-header"><strong>Cola actual</strong><button type="button" @onclick="Clear">Vaciar cola</button></div>
+                    <ol>
+                        @foreach (var track in Service.Queue.Tracks)
+                        {
+                            <li class="@(track == Service.Queue.Current ? "queue-current" : "")"><span>@track.Title</span><button type="button" aria-label="Quitar @track.Title" @onclick="() => Remove(track.Identity)">Quitar</button></li>
+                        }
+                    </ol>
+                </BbCollapsibleContent>
+            </BbCollapsible>
+        </div>
+        @if (Service.Status is PlaybackStatus.Loading) { <p class="player-state">Cargando audio...</p> }
+        @if (Service.Status is PlaybackStatus.Unavailable or PlaybackStatus.Error) { <p class="player-state player-state-error" role="alert">@(Service.ErrorMessage ?? "El audio no está disponible.")</p> }
+        @if (Service.Status is PlaybackStatus.Ended) { <p class="player-state">Pista finalizada. Usá Siguiente para continuar.</p> }
+    </section>
+}

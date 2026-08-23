@@ -10,7 +10,11 @@ public partial class MainLayout : IDisposable
     [Inject] private IJSRuntime JS { get; set; } = default!;
     private ElementReference audio;
     private DotNetObjectReference<MainLayout>? callback;
-    protected override void OnInitialized() => Playback.AudioCommandRequested += HandleAudioCommand;
+    protected override void OnInitialized()
+    {
+        Playback.Changed += Refresh;
+        Playback.AudioCommandRequested += HandleAudioCommand;
+    }
     protected override async Task OnAfterRenderAsync(bool firstRender) { if (!firstRender) return; callback = DotNetObjectReference.Create(this); await JS.InvokeVoidAsync("djTracksSessionsAudio.init", audio, callback); await JS.InvokeVoidAsync("djTracksSessionsAudio.setVolume", audio, Playback.Volume); }
     private async void HandleAudioCommand(AudioCommand command)
     {
@@ -27,5 +31,11 @@ public partial class MainLayout : IDisposable
     [JSInvokable] public void AudioEnded() => Playback.NotifyEnded();
     [JSInvokable] public void AudioUnavailable(string message) => Playback.NotifyUnavailable(message);
     [JSInvokable] public void AudioError(string message) => Playback.NotifyError(message);
-    public void Dispose() { Playback.AudioCommandRequested -= HandleAudioCommand; callback?.Dispose(); }
+    private void Refresh() => InvokeAsync(StateHasChanged);
+    public void Dispose()
+    {
+        Playback.Changed -= Refresh;
+        Playback.AudioCommandRequested -= HandleAudioCommand;
+        callback?.Dispose();
+    }
 }

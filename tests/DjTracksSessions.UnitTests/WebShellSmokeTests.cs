@@ -23,7 +23,8 @@ public sealed class WebShellSmokeTests
         Assert.Contains("href=\"/catalogo\"", html);
         Assert.Contains("href=\"/configuracion\"", html);
         Assert.DoesNotContain("href=\"/reproductor\"", html);
-        Assert.Contains("persistent-player", html);
+        Assert.DoesNotContain("persistent-player", html);
+        Assert.DoesNotContain("player-surface", html);
         Assert.DoesNotContain("BbSidebar", html);
         Assert.DoesNotContain("href=\"/#reproductor\"", html);
         Assert.DoesNotContain("href=\"/#analizador\"", html);
@@ -62,9 +63,16 @@ public sealed class WebShellSmokeTests
         var html = await client.GetStringAsync("/catalogo");
 
         Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
-        Assert.Contains("persistent-player", html);
+        Assert.DoesNotContain("persistent-player", html);
+        Assert.DoesNotContain("player-surface", html);
         var trackManagementMarkup = Path.Combine(AppContext.BaseDirectory, "../../../../../src/DjTracksSessions.Web/Pages/TrackManagement.razor");
         Assert.Contains("aria-label=\"Reproducir", await File.ReadAllTextAsync(trackManagementMarkup));
+
+        var playerMarkup = Path.Combine(AppContext.BaseDirectory, "../../../../../src/DjTracksSessions.Web/Components/PlayerSurface.razor");
+        var playerSource = await File.ReadAllTextAsync(playerMarkup);
+        Assert.Contains("BbCollapsible @bind-Open=\"QueueOpen\"", playerSource);
+        Assert.Contains("BbCollapsibleTrigger", playerSource);
+        Assert.Contains("BbCollapsibleContent", playerSource);
     }
 
     [Fact]

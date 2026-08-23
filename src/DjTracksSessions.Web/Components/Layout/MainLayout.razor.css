@@ -10,6 +10,7 @@
 ::deep .nav-link:hover { color: var(--foreground); }
 ::deep .nav-link.active { border-color: var(--primary); color: var(--primary); }
 .shell-header-actions { display: flex; align-items: center; margin-left: auto; }
-.shell-main { min-height: calc(100vh - 4.75rem); padding-bottom: 11rem; }
+.shell-main { min-height: calc(100vh - 4.75rem); }
+.shell-main-with-player { padding-bottom: 11rem; }
 .persistent-player { position: fixed; right: 0; bottom: 0; left: 0; z-index: 20; border-top: 1px solid var(--border-strong); box-shadow: 0 -.5rem 1.5rem rgb(0 0 0 / .12); }
 @media (max-width: 900px) { .shell-header { flex-wrap: wrap; gap: .5rem 1rem; padding: .7rem 1rem; } .shell-nav { order: 3; width: 100%; overflow-x: auto; } ::deep .nav-link { min-height: 2.8rem; } }
